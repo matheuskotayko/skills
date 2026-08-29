@@ -1,0 +1,10 @@
+# Private source material for profile-me — real personal/career data, never publish.
+skills/naoseionome/
+
+# Local scratch / generated reports
+*.local.json
+quality-gate-summary.md
+secret-scan.md
+attack-surface.md
+brag-facts.json
+metrics.json

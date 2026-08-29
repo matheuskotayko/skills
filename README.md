@@ -30,6 +30,7 @@ npx skills add matheusgmello/skills --skill <skill-name>
 | [pentest-me](skills/pentest-me/SKILL.md) | Attacks your own system as a red team before it ships and scores each attack by how many independent layers stop it (defense in depth), then writes fix reports. Maps the HTTP attack surface from code and covers 12 vectors (IDOR, mass assignment, injection, SSRF, XSS/CSRF, path traversal, upload, XXE, and more). Includes a static-audit mode (stack detection, isolation-mechanism mapping, frontend/backend role cross-check, every-handler walk) that emits a file-by-file report with ready-to-paste GitHub issues and an optional PDF. |
 | [quality-gate](skills/quality-gate/SKILL.md) | Sets up a ratchet quality gate — a PR may add code but never regress a metric (coverage, duplication, lint, large files, complexity, dependencies, mutation, benchmarks, vulns) — plus an AI babysitting loop that drives the PR to green. |
 | [brag-me](skills/brag-me/SKILL.md) | Turns your real contributions to a project into evidence-backed resume bullets, pulled from git history, merged PRs, and quality-gate metric trends. |
+| [profile-me](skills/profile-me/SKILL.md) | Writes professional-branding content — LinkedIn, résumé, portfolio, Lattes — from validated facts, using the X-Y-Z method, honest metrics, per-channel formatting, and no cross-section redundancy. Chains with `brag-me` (which harvests the facts). |
 | [secret-scan](skills/secret-scan/SKILL.md) | Scans the working tree (git-aware) and full git history for exposed secrets — API keys, tokens, private keys, passwords, and insecure `${VAR:-default}` fallbacks — redacts every match, and exits non-zero as a CI/pre-commit gate. |
 
 ## Quality gate — metric waves
@@ -57,5 +58,7 @@ The `quality-gate` ratchet grew in waves; a project can adopt them in order as i
 `quality-gate` implements the ratchet quality-gate and AI-babysitting method from Lucas Montano's video [Como garantir qualidade de código com IA](https://youtu.be/qToBgU8K4Ms). The concept (baseline + no-regression ratchet + babysitting) is his; the packaged script, per-stack recipes, and CI workflow are this repo's implementation.
 
 `brag-me` is original work — the automation is this repo's. The underlying "brag document" idea is Julia Evans' ([jvns.ca/blog/brag-documents](https://jvns.ca/blog/brag-documents/)).
+
+`profile-me` is original work. The X-Y-Z bullet method it uses is Laszlo Bock's (Google) formula; the LinkedIn field mechanics are common platform practice, distilled.
 
 `secret-scan` is original work — a named-pattern secret scanner in the spirit of gitleaks/trufflehog, git-history-aware and redaction-first, packaged as a standalone skill.
