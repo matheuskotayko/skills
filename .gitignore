@@ -1,5 +1,6 @@
 # Private source material for profile-me — real personal/career data, never publish.
-skills/naoseionome/
+# Keep any private facts file you feed profile-me out of this public repo.
+*.private.md
 
 # Local scratch / generated reports
 *.local.json
