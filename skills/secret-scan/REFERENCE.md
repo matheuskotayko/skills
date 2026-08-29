@@ -16,8 +16,11 @@ Named-pattern secret detection (the gitleaks approach): high signal, low noise, 
 | `private-key` | `-----BEGIN … PRIVATE KEY-----` header |
 | `jwt` | three base64url segments `eyJ….eyJ….…` |
 | `generic-secret-assignment` | `key`/`secret`/`token`/`password`/`client_secret` `= "…"` (8+ chars) |
+| `insecure-default-secret` | `${VAR:-default}` / `${VAR:=default}` where the var is secret-named — a public default that becomes a real secret if the env var isn't overridden |
 
-Add a pattern by extending `PATTERNS` in the script — `{ type, re }`, `re` global. For the generic assignment, the secret is capture group 1; for named ones it's the whole match.
+Add a pattern by extending `PATTERNS` in the script — `{ type, re }`, `re` global (`always: true` to run even on an allowlisted line). For the generic assignment and the default, the secret is capture group 1; for named ones it's the whole match.
+
+**Insecure defaults** are the sneaky one: `POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}` looks like an env lookup (which the allowlist ignores), but the `:-` bakes in a fallback that ships as the real password when the var is unset in prod. The pattern flags secret-named vars with a non-empty default. The fix isn't just removing the default — it's a **startup check that refuses to boot on the known-default value**, so a missing env var fails loudly instead of silently running insecure.
 
 ---
 
@@ -43,6 +46,8 @@ node secret-scan.mjs scan --root=. --git    # + git history (all commits)
 **Working tree** uses `git ls-files --cached --others --exclude-standard` inside a repo — it scans tracked files plus untracked ones that aren't `.gitignore`d. A gitignored `.env.local` is skipped: it can't reach git, so it isn't "exposed". Outside a git repo it walks the tree.
 
 **History** (`--git`) reads every added line across all commits. Run it at least once per repo: a key committed in March and "removed" in April is still sitting in the March commit. `git log -p` sees it; so does anyone who clones.
+
+**Frontend bundle.** Source scans miss a subtlety: anything prefixed `NEXT_PUBLIC_`, `VITE_`, `REACT_APP_`, `EXPO_PUBLIC_` is **inlined into the shipped JS** — it's public by design, so a "secret" behind such a var is exposed to every visitor. Two checks: grep the source for a secret-named var carrying one of those public prefixes, and scan the **built** bundle (`npm run build` then `scan --root=dist` / `build`) — `dist`/`build` are skipped by default precisely so you scan them deliberately, on the built output, not stale artifacts.
 
 ---
 

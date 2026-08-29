@@ -27,6 +27,10 @@ const PATTERNS = [
   { type: "private-key", re: /-----BEGIN (?:RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY-----/g },
   { type: "jwt", re: /eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g },
   { type: "generic-secret-assignment", re: /(?:api[_-]?key|apikey|secret|token|password|passwd|access[_-]?token|client[_-]?secret)['"]?\s*[:=]\s*['"]([^'"]{8,})['"]/gi },
+  // `${VAR:-default}` / `${VAR:=default}` where the var is secret-ish: a public
+  // default that becomes a real secret if the env var isn't overridden in prod.
+  // `always` so it runs even though `${` normally triggers the allowlist.
+  { type: "insecure-default-secret", always: true, re: /\$\{[A-Za-z0-9_]*(?:password|passwd|secret|token|apikey|api_key|jwt|credential|private_key)[A-Za-z0-9_]*:[-=]([^}]{3,})\}/gi },
 ];
 
 // Lines/values that are obviously placeholders, not real secrets.
@@ -38,15 +42,18 @@ export function redact(match) {
   return `${head}***redacted*** (${match.length} chars)`;
 }
 
-// Returns [{ type, redacted }] for one line. Allowlisted lines yield nothing.
+// Returns [{ type, redacted }] for one line. `always` patterns run even on an
+// allowlisted line (an insecure ${VAR:-default} is exactly a `${` the allowlist
+// would otherwise suppress); the rest are skipped when the line is allowlisted.
 export function detectSecrets(line, allow = ALLOW_RE) {
-  if (allow.test(line)) return [];
+  const allowlisted = allow.test(line);
   const hits = [];
-  for (const { type, re } of PATTERNS) {
+  for (const { type, re, always } of PATTERNS) {
+    if (allowlisted && !always) continue;
     re.lastIndex = 0;
     let m;
     while ((m = re.exec(line))) {
-      // for the generic assignment, the secret is group 1; else the whole match
+      // for the generic assignment / default, the secret is group 1; else the whole match
       const secret = m[1] ?? m[0];
       hits.push({ type, redacted: redact(secret) });
     }
@@ -141,6 +148,13 @@ function selftest() {
   // allowlist: placeholders and env lookups must NOT flag
   assert(detectSecrets(`api_key = "your-api-key-here"`).length === 0, "placeholder is allowlisted");
   assert(detectSecrets(`token = process.env.TOKEN`).length === 0, "env lookup is not a secret");
+
+  // insecure ${VAR:-default}: a baked-in default for a secret-named var, flagged
+  // even though `${` normally trips the allowlist. A plain env expansion is not.
+  assert(detectSecrets("JWT_SECRET=${JWT_SECRET:-devsupersecret}").some((h) => h.type === "insecure-default-secret"), "flag insecure secret default");
+  assert(detectSecrets("POSTGRES_PASSWORD: ${DB_PASSWORD:=changeme123}").some((h) => h.type === "insecure-default-secret"), "flag := default too");
+  assert(detectSecrets("PORT=${PORT:-3000}").length === 0, "non-secret var default is not flagged");
+  assert(detectSecrets("HOST=${DB_HOST}").length === 0, "plain env expansion is not a secret");
 
   // redaction never reveals the secret
   const r = redact("AKIA1234567890ABCDEF");
