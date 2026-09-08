@@ -27,6 +27,8 @@ Order is flexible; result and proof must always appear together. "Implementei AP
 
 If while drafting you realize you inferred a number the source doesn't contain (e.g. "90% accuracy" that isn't in the material), **self-correct and flag it** before finalizing. Same discipline as [brag-me](../brag-me/SKILL.md) — measured facts come from git/PRs/reports; anything else is labeled or asked.
 
+**A number with no auditable source is a different problem than no number.** If the user hands over a figure from memory — no commit, no report, no `brag.md` behind it ("I improved performance by 300%") — don't silently write it in as fact. Confirm explicitly: *"Is this number something you can back up if asked in an interview?"* Only write it in once confirmed, and mark it **self-reported** in the private source file (same label the interview facts get) so it's never confused with a measured one later.
+
 ---
 
 ## 3. Format per channel
@@ -95,6 +97,8 @@ The skill needs the user's **validated facts** — it does not invent them. Acce
 - A hand-written validated-facts doc (projects, roles, real metrics, stacks).
 - A short interview, when neither exists.
 
+**Interview questions**, when there's no written source yet: current role and real (formal) title; the stack, per project; any number already known (coverage, users, latency, revenue impact); if no number exists, the honest scope proxy instead (§2); the current focus area to declare, and any past area to mention without over-weighting (§6); target channels needed (LinkedIn / résumé / portfolio / Lattes).
+
 Keep this file **private** — it holds real metrics, client names, salary research, and bindings. It is the user's, never part of the published skill.
 
 ### Anonymized worked example
@@ -102,9 +106,11 @@ Keep this file **private** — it holds real metrics, client names, salary resea
 Facts (fictional): *"Backend dev at a fintech. Migrated a legacy monolith from PHP 5.6 to Laravel. Raised test coverage from 30% to 62%. Built a CSV importer that auto-categorizes transactions."*
 
 - **LinkedIn headline:** `Backend Developer | PHP · Laravel · PostgreSQL | Test Automation & Legacy Modernization`
-- **Résumé bullet:** "Raised test coverage 30%→62% by adding integration tests across the payments core."
+- **LinkedIn Experience bullet:** "Migrated a legacy PHP 5.6 monolith to Laravel and raised test coverage 30%→62% by adding integration tests across the payments core."
 - **LinkedIn About (prose):** "…I modernized a legacy billing system, migrating it from PHP 5.6 to Laravel and lifting test coverage from 30% to 62% along the way…"
+- **Résumé bullet:** "Raised test coverage 30%→62% by adding integration tests across the payments core."
 - **Portfolio hero (1 line):** "Backend developer who turns legacy systems into tested, maintainable ones."
+- **Portfolio About (prose):** a couple of sentences of trajectory that don't repeat the hero — how they ended up specializing in modernizing legacy backends.
 - **Portfolio project bullet:** "CSV statement importer with auto-categorization learned from the user's own history."
 
-Same facts, five shapes, one honest number (30→62) used consistently — never inflated to a round "doubled coverage" it can't defend.
+Same facts, six channel shapes, one honest number (30→62) used consistently — never inflated to a round "doubled coverage" it can't defend.
