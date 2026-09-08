@@ -6,6 +6,12 @@ Personal collection of agent skills (SKILL.md files) for Claude Code, Codex, and
 
 Central place to keep skills I use across machines and agents, installable anywhere with one command instead of copy-pasting files into each tool's config folder.
 
+## Repo conventions
+
+House rules for adding or editing a skill here — structure, style, privacy, verification — live
+in [AGENTS.md](AGENTS.md), the canonical agent instruction file. [CLAUDE.md](CLAUDE.md) is a thin
+pointer to it for Claude Code.
+
 ## Install
 
 Install everything:
@@ -63,3 +69,5 @@ The `quality-gate` ratchet grew in waves; a project can adopt them in order as i
 `profile-me` is original work. The X-Y-Z bullet method it uses is Laszlo Bock's (Google) formula; the LinkedIn field mechanics are common platform practice, distilled.
 
 `secret-scan` is original work — a named-pattern secret scanner in the spirit of gitleaks/trufflehog, git-history-aware and redaction-first, packaged as a standalone skill.
+
+`organize-agent-context` is original work — a canonical layout and altitude-split method for CLAUDE.md/AGENTS.md instruction files, informed by Claude Code's documented memory-loading mechanics. Used to write this repo's own [AGENTS.md](AGENTS.md)/[CLAUDE.md](CLAUDE.md).
