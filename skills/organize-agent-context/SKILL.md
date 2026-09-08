@@ -42,11 +42,15 @@ per package. Nested `CLAUDE.md` files load on demand when the agent touches that
 
 ```bash
 # every agent instruction file + size, smallest first
+# -r on xargs (skip the command on empty input): with none found, plain `xargs wc -l`
+# runs `wc -l` with no file arg and hangs reading stdin — exactly the fresh-repo case this skill targets.
 find . \( -name CLAUDE.md -o -name AGENTS.md -o -name .cursorrules -o -name copilot-instructions.md \) \
-  -not -path '*/node_modules/*' | xargs wc -l | sort -n
+  -not -path '*/node_modules/*' -print0 | xargs -0 -r wc -l | sort -n
 # drift: diff each CLAUDE.md against its sibling AGENTS.md
 # stray @imports in AGENTS.md that Claude Code would try to load (bare @word, not in backticks)
-grep -rnE '(^|[[:space:]])@[A-Za-z]' $(find . -name AGENTS.md -not -path '*/node_modules/*') | grep -vE '`@' || true
+# same empty-input guard: grep with zero file args reads stdin and hangs.
+files=$(find . -name AGENTS.md -not -path '*/node_modules/*')
+[ -n "$files" ] && grep -nE '(^|[[:space:]])@[A-Za-z]' $files | grep -vE '`@' || true
 ```
 
 ## Don't
