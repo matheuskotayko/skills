@@ -32,6 +32,7 @@ npx skills add matheusgmello/skills --skill <skill-name>
 | [brag-me](skills/brag-me/SKILL.md) | Turns your real contributions to a project into evidence-backed resume bullets, pulled from git history, merged PRs, and quality-gate metric trends. |
 | [profile-me](skills/profile-me/SKILL.md) | Writes professional-branding content — LinkedIn, résumé, portfolio, Lattes — from validated facts, using the X-Y-Z method, honest metrics, per-channel formatting, and no cross-section redundancy. Chains with `brag-me` (which harvests the facts). |
 | [secret-scan](skills/secret-scan/SKILL.md) | Scans the working tree (git-aware) and full git history for exposed secrets — API keys, tokens, private keys, passwords, and insecure `${VAR:-default}` fallbacks — redacts every match, and exits non-zero as a CI/pre-commit gate. |
+| [organize-agent-context](skills/organize-agent-context/SKILL.md) | Reorganizes a repo's AI-agent instruction files into a canonical layout — a thin CLAUDE.md pointer, one AGENTS.md per directory as the single source of truth, deep topic docs split under docs/, and project skills consolidated in .claude/skills/. Splits a bloated file by altitude (rules stay, narrative moves) and resolves CLAUDE.md/AGENTS.md drift. |
 
 ## Quality gate — metric waves
 
