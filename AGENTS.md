@@ -1,6 +1,6 @@
 # skills — agent instructions
 
-Personal collection of installable Agent Skills (`npx skills add matheusgmello/skills`). What
+Personal collection of installable Agent Skills (`npx skills add matheuskotayko/skills`). What
 this repo is, the full skill catalog, and attribution: [README.md](README.md) — this file is
 operational rules for anyone (human or agent) adding to or editing a skill here, not a duplicate
 of the catalog.

@@ -17,13 +17,13 @@ pointer to it for Claude Code.
 Install everything:
 
 ```
-npx skills add matheusgmello/skills
+npx skills add matheuskotayko/skills
 ```
 
 Install a specific skill:
 
 ```
-npx skills add matheusgmello/skills --skill <skill-name>
+npx skills add matheuskotayko/skills --skill <skill-name>
 ```
 
 ## Skills
