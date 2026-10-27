@@ -43,6 +43,22 @@ Symlink (`ln -s AGENTS.md CLAUDE.md`) also works but breaks on native Windows ch
 carry Claude-specific lines. The `@AGENTS.md` line still expands the file into context, so the prose
 below it is a reinforcement for the agent and a signpost for humans, not a duplicate.
 
+## Other tools
+
+Which tool reads which file by default (checked against each tool's docs; re-check, these move):
+
+| Tool | Reads by default | Reaches `AGENTS.md` via |
+|---|---|---|
+| Codex, Cursor, OpenCode | `AGENTS.md` | natively |
+| Claude Code | `CLAUDE.md` | `@AGENTS.md` import |
+| Gemini CLI | `GEMINI.md` | `@AGENTS.md` import in `GEMINI.md`, or `context.fileName` in `settings.json` |
+| Copilot coding agent | `AGENTS.md`, `.github/copilot-instructions.md` | natively |
+| Copilot in the editor | `.github/copilot-instructions.md` | a one-paragraph pointer there |
+
+Only add a pointer for a tool someone on the team runs. Each pointer says "read `AGENTS.md`, don't
+add rules here" — the moment one carries its own rules, it is a second source of truth that drifts.
+List the pointer files in the root `AGENTS.md` so a human knows not to write in them.
+
 ## Splitting by altitude
 
 The test for every section of a bloated canonical file: **would the agent need this on every
@@ -58,6 +74,78 @@ task in this directory?**
 | pointers to the `docs/` files | per-feature deep-dives (file upload, audit log, status flow) |
 
 Leave a one-line pointer where content moved: `` Auth: `AuthService` centralizes checks — table in [docs/authz.md](docs/authz.md). ``
+
+## Shaping the canonical file
+
+Moving text to the right file is half the job. The other half is making the canonical file
+something the agent can act on.
+
+### Invariants with "Guaranteed by"
+
+Number the rules that must never break, so a review can cite them ("invariant 3"), and say what
+keeps each one true:
+
+```markdown
+3. **Every list endpoint is paginated** — never returns a bare array.
+   *Guaranteed by:* `PaginationContractTest` (scans every controller).
+4. **HTTP calls only live in `data/<domain>`**, never in a screen component.
+   *Guaranteed by:* review (no lint rule).
+```
+
+The *Guaranteed by* line is the point: writing it shows how many rules rest on review alone —
+the fragile ones. Before writing a test or class name there, confirm it exists (`grep`/`find`).
+A rule that keeps breaking earns a guard (a test, a lint rule, a CI script), and the line is
+updated in the same PR.
+
+### "Read before…" table
+
+Route by task, not by topic. The agent knows what it is about to do, not which doc covers it:
+
+| Before you… | Read |
+|---|---|
+| add or change an endpoint | `docs/authz.md` (roles), `docs/architecture.md` (pagination) |
+| touch the order status flow | `docs/status-flow.md` |
+| change a screen | `DESIGN.md` |
+
+This replaces a flat "where to find more" list.
+
+### "Keeping context current" section
+
+A short protocol in the root `AGENTS.md` (packages link to it, they don't repeat it):
+
+- a doc changes in the **same PR** as the code it describes;
+- the text holds the **current state**; history is git's job;
+- open items go in a **Pending** list at the end of the doc, not mixed into the rules;
+- cite an issue/commit/PR only where a line exists *because of* a bug or an outside constraint.
+
+### Standard header on every `docs/*.md`
+
+```markdown
+# Status flow
+
+> **Read before:** changing a status, a transition, or who can move an order.
+> **Invariants it details:** 5, 7 (see AGENTS.md).
+```
+
+The header tells the agent within two lines whether this file is the one it needs.
+
+## Pruning
+
+An agent can't tell a stale file from a current one; it reads both as the truth. Before deleting,
+move anything still true into its canonical place, and check nothing else links to it
+(`git grep -n <file-name>`).
+
+| Usually stale | What to do |
+|---|---|
+| A generated doc site (Docusaurus, MkDocs…) repeating `docs/`, with no deploy | Move the unique bits, delete the site |
+| Specs/plans of features already shipped | Delete; keep the spec tooling for new work. A code comment citing one points at the PR instead |
+| Loose review files (design review, audit) whose findings were applied | Delete; `.gitignore` the folder the tool writes them to |
+| Code comments that say "see CLAUDE.md" when `CLAUDE.md` is now a pointer | Point at the real doc |
+| Empty or orphan files (a lockfile with no manifest) | Delete |
+
+**Blocks other tools inject** (memory/routing snippets kept between HTML-comment markers) count
+against the ~200-line budget. If only one tool needs it, keep it inside an HTML comment or in that
+tool's own file; don't let it crowd out the repo's rules.
 
 ## Skills
 
