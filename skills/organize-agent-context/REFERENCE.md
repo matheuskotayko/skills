@@ -43,6 +43,22 @@ Symlink (`ln -s AGENTS.md CLAUDE.md`) also works but breaks on native Windows ch
 carry Claude-specific lines. The `@AGENTS.md` line still expands the file into context, so the prose
 below it is a reinforcement for the agent and a signpost for humans, not a duplicate.
 
+## Other tools
+
+Which tool reads which file by default (checked against each tool's docs; re-check, these move):
+
+| Tool | Reads by default | Reaches `AGENTS.md` via |
+|---|---|---|
+| Codex, Cursor, OpenCode | `AGENTS.md` | natively |
+| Claude Code | `CLAUDE.md` | `@AGENTS.md` import |
+| Gemini CLI | `GEMINI.md` | `@AGENTS.md` import in `GEMINI.md`, or `context.fileName` in `settings.json` |
+| Copilot coding agent | `AGENTS.md`, `.github/copilot-instructions.md` | natively |
+| Copilot in the editor | `.github/copilot-instructions.md` | a one-paragraph pointer there |
+
+Only add a pointer for a tool someone on the team runs. Each pointer says "read `AGENTS.md`, don't
+add rules here" — the moment one carries its own rules, it is a second source of truth that drifts.
+List the pointer files in the root `AGENTS.md` so a human knows not to write in them.
+
 ## Splitting by altitude
 
 The test for every section of a bloated canonical file: **would the agent need this on every

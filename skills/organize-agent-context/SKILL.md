@@ -12,8 +12,9 @@ on demand. Works for a single repo or a monorepo.
 
 | File | Role |
 |---|---|
-| `AGENTS.md` (per directory) | **Canonical.** Read natively by Codex/Gemini/Cursor, by Claude Code via the pointer. Only what applies to *every* task: stack, structure, invariant rules, pointers. Aim under ~200 lines. |
+| `AGENTS.md` (per directory) | **Canonical.** Read natively by Codex, Cursor and the Copilot coding agent; by Claude Code, Gemini CLI and other Copilot surfaces only through a pointer. Only what applies to *every* task: stack, structure, invariant rules, pointers. Aim under ~200 lines. |
 | `CLAUDE.md` (per directory) | Thin pointer: `@AGENTS.md` + one line "don't add rules here, edit AGENTS.md". Claude Code reads `CLAUDE.md`, **not** `AGENTS.md`. |
+| `GEMINI.md`, `.github/copilot-instructions.md` | Same thin pointer, only for tools the team actually uses. Gemini CLI reads `GEMINI.md` unless `context.fileName` is configured. Never a second copy of the rules. |
 | `<pkg>/docs/*.md` | One file per topic — the *why* and *how*. Reference, loaded on demand, linked from `AGENTS.md`. Split here only when `AGENTS.md` outgrows ~200 lines. |
 | `.claude/skills/<name>/` | Project skills, one real dir each, versioned. |
 
@@ -33,7 +34,8 @@ per package. Nested `CLAUDE.md` files load on demand when the agent touches that
    - verify facts against the code as you go — stale canonical files lie; recover anything real
      that no file documents.
 4. **Write the pointers.** Every `CLAUDE.md` → `@AGENTS.md` + the "don't duplicate" line. Use the
-   `@import`, not a symlink, if any contributor is on native Windows.
+   `@import`, not a symlink, if any contributor is on native Windows. Same pointer for `GEMINI.md`
+   / `copilot-instructions.md` when those tools are in use — see [REFERENCE.md](REFERENCE.md) § Other tools.
 5. **Consolidate skills.** One skill root: `.claude/skills/`. See [REFERENCE.md](REFERENCE.md) § Skills.
 6. **Verify.** New Claude Code session → `/context` lists the files under **Memory files**. Re-run
    the audit block: no dangling pointers, no stray `@token` imports in `AGENTS.md`.
