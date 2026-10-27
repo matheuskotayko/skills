@@ -39,12 +39,16 @@ per package. Nested `CLAUDE.md` files load on demand when the agent touches that
    compiler/lint, or review only); a **Read before…** table routing each kind of task to its doc;
    a **Keeping context current** section; a standard header on every `docs/*.md`. Formats and
    examples: [REFERENCE.md](REFERENCE.md) § Shaping the canonical file.
-5. **Write the pointers.** Every `CLAUDE.md` → `@AGENTS.md` + the "don't duplicate" line. Use the
+5. **Prune what reads as current but isn't.** A doc site duplicating `docs/`, specs of delivered
+   features, loose review/notes files, code comments pointing at a pointer file. Move anything still
+   true into the canonical place, then delete. See [REFERENCE.md](REFERENCE.md) § Pruning.
+6. **Write the pointers.** Every `CLAUDE.md` → `@AGENTS.md` + the "don't duplicate" line. Use the
    `@import`, not a symlink, if any contributor is on native Windows. Same pointer for `GEMINI.md`
    / `copilot-instructions.md` when those tools are in use — see [REFERENCE.md](REFERENCE.md) § Other tools.
-6. **Consolidate skills.** One skill root: `.claude/skills/`. See [REFERENCE.md](REFERENCE.md) § Skills.
-7. **Verify.** New Claude Code session → `/context` lists the files under **Memory files**. Re-run
-   the audit block: no dangling pointers, no stray `@token` imports in `AGENTS.md`.
+7. **Consolidate skills.** One skill root: `.claude/skills/`. See [REFERENCE.md](REFERENCE.md) § Skills.
+8. **Verify.** New Claude Code session → `/context` lists the files under **Memory files**. Re-run
+   the audit block: no dangling pointers, no stray `@token` imports in `AGENTS.md`, no broken
+   relative links, and every test/class/endpoint named in an invariant found by `grep`.
 
 ## Audit block
 

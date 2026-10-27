@@ -129,6 +129,24 @@ A short protocol in the root `AGENTS.md` (packages link to it, they don't repeat
 
 The header tells the agent within two lines whether this file is the one it needs.
 
+## Pruning
+
+An agent can't tell a stale file from a current one; it reads both as the truth. Before deleting,
+move anything still true into its canonical place, and check nothing else links to it
+(`git grep -n <file-name>`).
+
+| Usually stale | What to do |
+|---|---|
+| A generated doc site (Docusaurus, MkDocs…) repeating `docs/`, with no deploy | Move the unique bits, delete the site |
+| Specs/plans of features already shipped | Delete; keep the spec tooling for new work. A code comment citing one points at the PR instead |
+| Loose review files (design review, audit) whose findings were applied | Delete; `.gitignore` the folder the tool writes them to |
+| Code comments that say "see CLAUDE.md" when `CLAUDE.md` is now a pointer | Point at the real doc |
+| Empty or orphan files (a lockfile with no manifest) | Delete |
+
+**Blocks other tools inject** (memory/routing snippets kept between HTML-comment markers) count
+against the ~200-line budget. If only one tool needs it, keep it inside an HTML comment or in that
+tool's own file; don't let it crowd out the repo's rules.
+
 ## Skills
 
 **Project skill vs personal skill.**
