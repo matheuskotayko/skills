@@ -75,6 +75,60 @@ task in this directory?**
 
 Leave a one-line pointer where content moved: `` Auth: `AuthService` centralizes checks — table in [docs/authz.md](docs/authz.md). ``
 
+## Shaping the canonical file
+
+Moving text to the right file is half the job. The other half is making the canonical file
+something the agent can act on.
+
+### Invariants with "Guaranteed by"
+
+Number the rules that must never break, so a review can cite them ("invariant 3"), and say what
+keeps each one true:
+
+```markdown
+3. **Every list endpoint is paginated** — never returns a bare array.
+   *Guaranteed by:* `PaginationContractTest` (scans every controller).
+4. **HTTP calls only live in `data/<domain>`**, never in a screen component.
+   *Guaranteed by:* review (no lint rule).
+```
+
+The *Guaranteed by* line is the point: writing it shows how many rules rest on review alone —
+the fragile ones. Before writing a test or class name there, confirm it exists (`grep`/`find`).
+A rule that keeps breaking earns a guard (a test, a lint rule, a CI script), and the line is
+updated in the same PR.
+
+### "Read before…" table
+
+Route by task, not by topic. The agent knows what it is about to do, not which doc covers it:
+
+| Before you… | Read |
+|---|---|
+| add or change an endpoint | `docs/authz.md` (roles), `docs/architecture.md` (pagination) |
+| touch the order status flow | `docs/status-flow.md` |
+| change a screen | `DESIGN.md` |
+
+This replaces a flat "where to find more" list.
+
+### "Keeping context current" section
+
+A short protocol in the root `AGENTS.md` (packages link to it, they don't repeat it):
+
+- a doc changes in the **same PR** as the code it describes;
+- the text holds the **current state**; history is git's job;
+- open items go in a **Pending** list at the end of the doc, not mixed into the rules;
+- cite an issue/commit/PR only where a line exists *because of* a bug or an outside constraint.
+
+### Standard header on every `docs/*.md`
+
+```markdown
+# Status flow
+
+> **Read before:** changing a status, a transition, or who can move an order.
+> **Invariants it details:** 5, 7 (see AGENTS.md).
+```
+
+The header tells the agent within two lines whether this file is the one it needs.
+
 ## Skills
 
 **Project skill vs personal skill.**

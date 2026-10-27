@@ -33,11 +33,17 @@ per package. Nested `CLAUDE.md` files load on demand when the agent touches that
      `<pkg>/docs/<topic>.md` with a one-line pointer left behind. Rule stays, explanation moves.
    - verify facts against the code as you go — stale canonical files lie; recover anything real
      that no file documents.
-4. **Write the pointers.** Every `CLAUDE.md` → `@AGENTS.md` + the "don't duplicate" line. Use the
+   - history in running text ("added in v39", "used to be…", "phase 4") → **out**; git keeps it.
+     A *why* that still drives decisions stays as a short **Why** block.
+4. **Shape the canonical file.** Numbered invariants, each with **Guaranteed by** (a test, the
+   compiler/lint, or review only); a **Read before…** table routing each kind of task to its doc;
+   a **Keeping context current** section; a standard header on every `docs/*.md`. Formats and
+   examples: [REFERENCE.md](REFERENCE.md) § Shaping the canonical file.
+5. **Write the pointers.** Every `CLAUDE.md` → `@AGENTS.md` + the "don't duplicate" line. Use the
    `@import`, not a symlink, if any contributor is on native Windows. Same pointer for `GEMINI.md`
    / `copilot-instructions.md` when those tools are in use — see [REFERENCE.md](REFERENCE.md) § Other tools.
-5. **Consolidate skills.** One skill root: `.claude/skills/`. See [REFERENCE.md](REFERENCE.md) § Skills.
-6. **Verify.** New Claude Code session → `/context` lists the files under **Memory files**. Re-run
+6. **Consolidate skills.** One skill root: `.claude/skills/`. See [REFERENCE.md](REFERENCE.md) § Skills.
+7. **Verify.** New Claude Code session → `/context` lists the files under **Memory files**. Re-run
    the audit block: no dangling pointers, no stray `@token` imports in `AGENTS.md`.
 
 ## Audit block
