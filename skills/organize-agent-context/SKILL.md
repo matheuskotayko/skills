@@ -60,9 +60,10 @@ find . \( -name CLAUDE.md -o -name AGENTS.md -o -name .cursorrules -o -name copi
   -not -path '*/node_modules/*' -print0 | xargs -0 -r wc -l | sort -n
 # drift: diff each CLAUDE.md against its sibling AGENTS.md
 # stray @imports in AGENTS.md that Claude Code would try to load (bare @word, not in backticks)
-# same empty-input guard: grep with zero file args reads stdin and hangs.
-files=$(find . -name AGENTS.md -not -path '*/node_modules/*')
-[ -n "$files" ] && grep -nE '(^|[[:space:]])@[A-Za-z]' $files | grep -vE '`@' || true
+# same empty-input guard (-r): grep with zero file args reads stdin and hangs. -print0/xargs, not
+# an unquoted $files: zsh doesn't word-split it and hands grep one long, nonexistent file name.
+find . -name AGENTS.md -not -path '*/node_modules/*' -print0 \
+  | xargs -0 -r grep -nE '(^|[[:space:]])@[A-Za-z]' | grep -vE '`@' || true
 ```
 
 ## Don't
