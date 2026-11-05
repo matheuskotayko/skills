@@ -5,7 +5,14 @@
 Confirmed against the Claude Code memory docs. These drive the layout.
 
 - Claude Code loads `CLAUDE.md` and `CLAUDE.local.md` from the working directory and **every
-  directory above it**, concatenated root-first. It does **not** read `AGENTS.md`.
+  directory above it**, concatenated root-first.
+- It reads `AGENTS.md` directly (v2.1.277+) **only when none of `CLAUDE.md`, `.claude/CLAUDE.md`,
+  `CLAUDE.local.md` exists** in the cwd or above (`~/.claude/CLAUDE.md` and managed ones don't count).
+  With any of those present and no import, `AGENTS.md` is **not loaded**. A `CLAUDE.md` that
+  imports it loads it once. Before v2.1.281 some sessions (Bedrock, telemetry off) read `CLAUDE.md`
+  only. The `Project instructions` setting (`/config`) can force `claude-md-and-agents-md`
+  (deduped) or `claude-md`. Source: the Claude Code memory docs, "AGENTS.md" section; versions
+  come from that page, re-check them.
 - `CLAUDE.md` in a **subdirectory** loads *on demand* — when the agent reads a file in that
   subtree, not at launch. So a monorepo's `packages/api/CLAUDE.md` only costs context while
   working in `packages/api/`.
@@ -27,7 +34,14 @@ Confirmed against the Claude Code memory docs. These drive the layout.
 
 ## The pointer file
 
-Prefer the import so Windows contributors are covered:
+**Often unnecessary.** With a recent Claude Code and no other `CLAUDE.md`, `AGENTS.md` alone is
+enough — the docs say to remove a `CLAUDE.md` that holds only the `@AGENTS.md` import. Keep it when:
+the repo already has a `CLAUDE.md` with its own content (otherwise `AGENTS.md` is skipped), some
+sessions can't read `AGENTS.md` directly (pre-2.1.277, Bedrock/telemetry-off before 2.1.281,
+built-in plugin disabled), or `Project instructions` is set to `claude-md`. Keeping the import never
+double-loads. If you also have a `SessionStart` hook printing `AGENTS.md`, remove the hook.
+
+When you do keep one, prefer the import so Windows contributors are covered:
 
 ```markdown
 @AGENTS.md
@@ -50,7 +64,7 @@ Which tool reads which file by default (checked against each tool's docs; re-che
 | Tool | Reads by default | Reaches `AGENTS.md` via |
 |---|---|---|
 | Codex, Cursor, OpenCode | `AGENTS.md` | natively |
-| Claude Code | `CLAUDE.md` | `@AGENTS.md` import |
+| Claude Code | `CLAUDE.md`, else `AGENTS.md` (2.1.277+, only if no `CLAUDE.md`) | natively when no `CLAUDE.md`; else `@AGENTS.md` import |
 | Gemini CLI | `GEMINI.md` | `@AGENTS.md` import in `GEMINI.md`, or `context.fileName` in `settings.json` |
 | Copilot coding agent | `AGENTS.md`, `.github/copilot-instructions.md` | natively |
 | Copilot in the editor | `.github/copilot-instructions.md` | a one-paragraph pointer there |

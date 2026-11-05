@@ -1,19 +1,19 @@
 ---
 name: organize-agent-context
-description: Reorganize a repo's AI-agent instruction files into a canonical layout — a thin CLAUDE.md pointer, one AGENTS.md per directory as the single source of truth, deep topic docs split under docs/, and project skills consolidated in .claude/skills/ — then makes the canonical file actionable (numbered invariants with what guarantees them, a task-to-doc routing table, an upkeep protocol) and prunes stale context agents would read as current. Use when a CLAUDE.md or AGENTS.md is bloated, duplicated, or drifted out of sync, when setting up agent instructions for a repo or monorepo, or when the user mentions organizing, splitting, or cleaning up AI context, CLAUDE.md, or AGENTS.md.
+description: Reorganize a repo's AI-agent instruction files into a canonical layout — one AGENTS.md per directory as the single source of truth, deep topic docs split under docs/, and project skills consolidated in .claude/skills/, plus an optional CLAUDE.md pointer only where Claude Code needs one — then makes the canonical file actionable (numbered invariants with what guarantees them, a task-to-doc routing table, an upkeep protocol) and prunes stale context agents would read as current. Use when a CLAUDE.md or AGENTS.md is bloated, duplicated, or drifted out of sync, when setting up agent instructions for a repo or monorepo, or when the user mentions organizing, splitting, or cleaning up AI context, CLAUDE.md, or AGENTS.md.
 ---
 
 # Organize agent context
 
-One source of truth per directory, thin pointers for Claude Code, deep detail split out and loaded
+One source of truth per directory, optional thin pointers where a tool needs one, deep detail split out and loaded
 on demand. Works for a single repo or a monorepo.
 
 ## Target layout
 
 | File | Role |
 |---|---|
-| `AGENTS.md` (per directory) | **Canonical.** Read natively by Codex, Cursor and the Copilot coding agent; by Claude Code, Gemini CLI and other Copilot surfaces only through a pointer. Only what applies to *every* task: stack, structure, invariant rules, pointers. Aim under ~200 lines. |
-| `CLAUDE.md` (per directory) | Thin pointer: `@AGENTS.md` + one line "don't add rules here, edit AGENTS.md". Claude Code reads `CLAUDE.md`, **not** `AGENTS.md`. |
+| `AGENTS.md` (per directory) | **Canonical.** Read natively by Codex, Cursor, the Copilot coding agent and Claude Code (v2.1.277+, only when no `CLAUDE.md` exists); Gemini CLI and other Copilot surfaces need a pointer. Only what applies to *every* task: stack, structure, invariant rules, pointers. Aim under ~200 lines. |
+| `CLAUDE.md` (per directory) | **Optional** thin pointer: `@AGENTS.md` + one line "don't add rules here, edit AGENTS.md". Claude Code reads `AGENTS.md` directly only when no `CLAUDE.md` exists above the cwd; once one exists it reads that and ignores a bare `AGENTS.md`. Keep the pointer only if a `CLAUDE.md` is already there or someone runs an older/restricted Claude Code. |
 | `GEMINI.md`, `.github/copilot-instructions.md` | Same thin pointer, only for tools the team actually uses. Gemini CLI reads `GEMINI.md` unless `context.fileName` is configured. Never a second copy of the rules. |
 | `<pkg>/docs/*.md` | One file per topic — the *why* and *how*. Reference, loaded on demand, linked from `AGENTS.md`. Split here only when `AGENTS.md` outgrows ~200 lines. |
 | `.claude/skills/<name>/` | Project skills, one real dir each, versioned. |
@@ -42,8 +42,10 @@ per package. Nested `CLAUDE.md` files load on demand when the agent touches that
 5. **Prune what reads as current but isn't.** A doc site duplicating `docs/`, specs of delivered
    features, loose review/notes files, code comments pointing at a pointer file. Move anything still
    true into the canonical place, then delete. See [REFERENCE.md](REFERENCE.md) § Pruning.
-6. **Write the pointers.** Every `CLAUDE.md` → `@AGENTS.md` + the "don't duplicate" line. Use the
-   `@import`, not a symlink, if any contributor is on native Windows. Same pointer for `GEMINI.md`
+6. **Write the pointers — only where needed.** If a `CLAUDE.md` holds nothing but the old rules, delete
+   it once its content is in `AGENTS.md`. Keep or write one when it must stay (it has Claude-only
+   lines, or someone's Claude Code is pre-2.1.277 / can't read `AGENTS.md` directly): `@AGENTS.md` +
+   the "don't duplicate" line. Use the `@import`, not a symlink, on native Windows. Same pointer for `GEMINI.md`
    / `copilot-instructions.md` when those tools are in use — see [REFERENCE.md](REFERENCE.md) § Other tools.
 7. **Consolidate skills.** One skill root: `.claude/skills/`. See [REFERENCE.md](REFERENCE.md) § Skills.
 8. **Verify.** New Claude Code session → `/context` lists the files under **Memory files**. Re-run
