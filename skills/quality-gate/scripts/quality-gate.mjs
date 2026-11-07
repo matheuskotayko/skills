@@ -134,15 +134,26 @@ export function jacocoCoverage(csvs) {
   return total ? round((covered / total) * 100) : null;
 }
 
+// jest json-summary: one report = its pct; several = summed covered/total lines (size-weighted).
+export function jestCoverage(reports) {
+  if (reports.length === 1) {
+    const t = reports[0].total;
+    return round(t?.lines?.pct ?? t?.statements?.pct ?? null);
+  }
+  let covered = 0, total = 0;
+  for (const r of reports) {
+    covered += r.total?.lines?.covered || 0;
+    total += r.total?.lines?.total || 0;
+  }
+  return total ? round((covered / total) * 100) : null;
+}
+
 // coverage: jest json-summary (total.lines.pct) or jacoco CSV path(s).
 function collectCoverage(cfg) {
   const paths = reportPaths(cfg.reports?.coverage);
   if (!paths) return null;
   const p = paths[0];
-  if (p.endsWith(".json")) {
-    const j = readJSON(p);
-    return round(j.total?.lines?.pct ?? j.total?.statements?.pct ?? null);
-  }
+  if (p.endsWith(".json")) return jestCoverage(paths.filter((x) => x.endsWith(".json")).map(readJSON));
   if (p.endsWith(".csv")) return jacocoCoverage(paths.map((x) => readFileSync(x, "utf8")));
   return null;
 }
@@ -536,6 +547,9 @@ function selftest() {
   assert(jacocoCoverage([header + "g,p,A,0,300\n", header + "g,p,B,100,0\n"]) === 75, "larger module weighs more");
   assert(reportPaths(["a", "b"], (x) => x === "b")?.join() === "b", "missing report is skipped");
   assert(reportPaths(["a"], () => false) === null, "no report = metric absent");
+  const jr = (c, t) => ({ total: { lines: { covered: c, total: t, pct: (c / t) * 100 } } });
+  assert(jestCoverage([jr(50, 100)]) === 50, "single jest report uses pct");
+  assert(jestCoverage([jr(0, 300), jr(100, 100)]) === 25, "jest reports weighted by lines");
   assert(reportPaths("a", () => true)?.join() === "a", "single path still works");
 
   // (h) mutation score drops → regression (higher_is_better)

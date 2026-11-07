@@ -35,7 +35,7 @@ Directions are fixed in the script, not the file: `coverage` and `mutation` high
 
 The script collects `duplication` (jscpd), `largeFiles` (line count), and `dependencies` (madge) itself. For `coverage`, `lint`, `complexity`, `mutation`, and `security` it reads a report file whose path you set in `reports.*`. Generate those reports before running `collect`.
 
-`reports.coverage` and `reports.lint` also accept a **list of paths** — one report per module in a multi-module build (Maven modules, monorepo packages). Missing files are skipped; jacoco CSVs are summed by instruction count, so a big module weighs more than a small one; lint counts are summed.
+`reports.coverage` and `reports.lint` also accept a **list of paths** — one report per module in a multi-module build (Maven modules, monorepo packages). Missing files are skipped; jacoco CSVs are summed by instruction count and jest summaries by covered/total lines, so a big module weighs more than a small one (don't mix formats in one list); lint counts are summed.
 
 `complexity` reuses the **lint report** — turn the cyclomatic rule on so violations land there. In eslint: `"complexity": ["warn", 10]` in your config (the script counts messages whose `ruleId` matches `complexityRule`, default `"complexity"`). In checkstyle: the `CyclomaticComplexity` module (the script counts `<error>` whose `source` mentions `Cyclomatic`). When `complexity` is active, those violations are **not** also counted by `lint` — otherwise one complex function would regress two metrics, and turning the rule on would regress lint by the whole backlog.
 
