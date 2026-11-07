@@ -91,7 +91,26 @@ mvn -B org.pitest:pitest-maven:mutationCoverage -Dpit.reportFormats=XML
 mvn -B jmh:benchmark -Djmh.rf=json -Djmh.rff=reports/bench.json
 ```
 
-Point `reports.coverage` at a `.json` (jest summary) or `.csv` (jacoco); `reports.lint` at `.json` (eslint) or `.xml` (checkstyle); `reports.mutation` at a stryker `.json` or pitest `.xml`. The script auto-detects by extension. `security` is npm-audit-only; drop `"security"` from `metrics` on non-Node projects.
+Point `reports.coverage` at a `.json` (jest summary) or `.csv` (jacoco); `reports.lint` at `.json` (eslint) or `.xml` (checkstyle); `reports.mutation` at a stryker `.json` or pitest `.xml`. The script auto-detects by extension. The `security` metric is npm-audit-only; on non-Node projects drop `"security"` from `metrics` and use `osv-gate` below.
+
+### Vulnerabilities on any stack — `osv-gate`
+
+[osv-scanner](https://google.github.io/osv-scanner/) reads lockfiles and SBOMs for npm, Maven, Gradle, pip, Go, Cargo and more, but exits non-zero on *any* finding. [`scripts/osv-gate.mjs`](scripts/osv-gate.mjs) applies a severity cut to its JSON report: **CVSS ≥ 7 (or unscored) blocks**, lower only warns. It's a pass/fail step, not a ratcheted metric — a known-vulnerable dependency must go, not merely "not get worse".
+
+```bash
+# lockfile-based stacks (npm, pip, Go, Cargo, Gradle lockfile…)
+osv-scanner scan -r . --format json > osv.json || true    # || true: osv-gate decides the cut
+node osv-gate.mjs osv.json            # --min=9.0 to block only critical
+
+# Maven (no lockfile): scan a production SBOM instead of pom.xml — scanning the pom tries to
+# resolve your own SNAPSHOT modules from Maven Central and stops
+mvn -B org.cyclonedx:cyclonedx-maven-plugin:2.9.1:makeAggregateBom \
+  -DincludeTestScope=false -DincludeProvidedScope=false -DoutputFormat=json -DoutputName=bom
+osv-scanner scan -L target/bom.json --format json > osv.json || true
+node osv-gate.mjs osv.json
+```
+
+Justified exceptions go in `osv-scanner.toml` (`[[IgnoredVulns]]` with `reason` and `ignoreUntil`), passed via `--config`; osv-scanner drops them from the report. In CI, download a pinned release and verify it against `osv-scanner_SHA256SUMS` before running it.
 
 ### Other stacks (Python/Ruby/…)
 

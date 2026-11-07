@@ -31,6 +31,7 @@ Script + config: [scripts/quality-gate.mjs](scripts/quality-gate.mjs). Recipes, 
 | Mutation score (killed mutants %) | drops | yes |
 | Benchmark (per named bench) | slows beyond the tolerance band | yes |
 | Vulnerabilities (`npm audit`) | any `critical` (or `high` with `securityBlockLevel: "high"`) | critical blocks, high warns by default |
+| Vulnerabilities, any stack (`osv-gate`, pass/fail outside the ratchet) | any CVSS ≥ 7 or unscored | yes |
 
 A metric with no report is recorded as `null` — it never counts as an improvement, so you cannot game the ratchet by hiding a signal.
 
