@@ -34,7 +34,7 @@ npx skills add matheuskotayko/skills --skill <skill-name>
 | [grill-while-coding](skills/grill-while-coding/SKILL.md) | Pauses mid-implementation to question business-rule or architectural decisions as they're written, keeping the user aligned with the code. |
 | [write-a-skill](skills/write-a-skill/SKILL.md) | Creates new agent skills with proper structure, progressive disclosure, and bundled resources. |
 | [pentest-me](skills/pentest-me/SKILL.md) | Attacks your own system as a red team before it ships and scores each attack by how many independent layers stop it (defense in depth), then writes fix reports. Maps the HTTP attack surface from code and covers 12 vectors (IDOR, mass assignment, injection, SSRF, XSS/CSRF, path traversal, upload, XXE, and more). Includes a static-audit mode (stack detection, isolation-mechanism mapping, frontend/backend role cross-check, every-handler walk) that emits a file-by-file report with ready-to-paste GitHub issues and an optional PDF. |
-| [quality-gate](skills/quality-gate/SKILL.md) | Sets up a ratchet quality gate — a PR may add code but never regress a metric (coverage, duplication, lint, large files, complexity, dependencies, mutation, benchmarks, vulns) — plus an AI babysitting loop that drives the PR to green. |
+| [quality-gate](skills/quality-gate/SKILL.md) | Sets up a ratchet quality gate — a PR may add code but never regress a metric (coverage, duplication, lint, large files, complexity, dependencies, mutation, benchmarks, vulns) — plus an AI babysitting loop that drives the PR to green. Optional noise bands for coverage/duplication (`tolerances`), multi-module reports, `securityBlockLevel`, an `osv-gate` severity cut for vulnerabilities on any stack, and an `oxlint-report` converter. |
 | [brag-me](skills/brag-me/SKILL.md) | Turns your real contributions to a project into evidence-backed resume bullets, pulled from git history, merged PRs, and quality-gate metric trends. |
 | [profile-me](skills/profile-me/SKILL.md) | Writes professional-branding content — LinkedIn, résumé, portfolio, Lattes — from validated facts, using the X-Y-Z method, honest metrics, per-channel formatting, and no cross-section redundancy. Chains with `brag-me` (which harvests the facts). |
 | [secret-scan](skills/secret-scan/SKILL.md) | Scans the working tree (git-aware) and full git history for exposed secrets — API keys, tokens, private keys, passwords, and insecure `${VAR:-default}` fallbacks — redacts every match, and exits non-zero as a CI/pre-commit gate. |
@@ -50,7 +50,7 @@ The `quality-gate` ratchet grew in waves; a project can adopt them in order as i
 | Wave 1 | cyclomatic complexity, circular dependencies | Cheap, high signal; complexity reuses the lint report, dependencies via `madge`. |
 | Wave 2 | mutation score | Slow (reruns the suite per mutant) — only meaningful once the test suite is solid. Own CI job. |
 | Wave 3 | microbenchmarks | Per-named-bench timing, judged against a symmetric tolerance band (default ±10%) because CI timing is noisy. Own CI job. |
-| Pass/fail (not ratcheted) | e2e, regression | Binary suites, run as separate required CI jobs — not `baseline.json` metrics. See [REFERENCE §3b](skills/quality-gate/REFERENCE.md). |
+| Pass/fail (not ratcheted) | e2e, regression, `osv-gate` (vulnerabilities on any stack) | Binary suites, run as separate required CI jobs — not `baseline.json` metrics. See [REFERENCE §3b](skills/quality-gate/REFERENCE.md). |
 
 ## Attribution
 
