@@ -35,7 +35,13 @@ Directions are fixed in the script, not the file: `coverage` and `mutation` high
 
 The script collects `duplication` (jscpd), `largeFiles` (line count), and `dependencies` (madge) itself. For `coverage`, `lint`, `complexity`, `mutation`, and `security` it reads a report file whose path you set in `reports.*`. Generate those reports before running `collect`.
 
-`complexity` reuses the **lint report** — turn the cyclomatic rule on so violations land there. In eslint: `"complexity": ["warn", 10]` in your config (the script counts messages whose `ruleId` matches `complexityRule`, default `"complexity"`). In checkstyle: the `CyclomaticComplexity` module (the script counts `<error>` whose `source` mentions `Cyclomatic`).
+`reports.coverage` and `reports.lint` also accept a **list of paths** — one report per module in a multi-module build (Maven modules, monorepo packages). Missing files are skipped; jacoco CSVs are summed by instruction count, so a big module weighs more than a small one; lint counts are summed.
+
+`complexity` reuses the **lint report** — turn the cyclomatic rule on so violations land there. In eslint: `"complexity": ["warn", 10]` in your config (the script counts messages whose `ruleId` matches `complexityRule`, default `"complexity"`). In checkstyle: the `CyclomaticComplexity` module (the script counts `<error>` whose `source` mentions `Cyclomatic`). When `complexity` is active, those violations are **not** also counted by `lint` — otherwise one complex function would regress two metrics, and turning the rule on would regress lint by the whole backlog.
+
+`duplication` runs jscpd over every format it knows (markdown, json, xml…), so editing docs would move the code-duplication number. Restrict it with `duplicationFormats` (jscpd format names, e.g. `["typescript", "java"]` — not extensions) and exclude paths with `duplicationIgnore` (globs; jscpd ignores `exclude` and `.jscpdignore` here). `dependencies` uses madge, which only reads `.js` by default: a TS project needs a `.madgerc` with `{"fileExtensions": ["ts", "tsx"]}`, or it reports 0 cycles silently. jscpd and madge are pinned to a major version so a release can't shift the baseline under you.
+
+`tolerances` (e.g. `{"duplication": 0.3, "coverage": 0.15}`) gives percentage metrics an **absolute-point** noise band: a change inside it is neither a regression nor an improvement, so the baseline still only advances on genuine improvement. Leave it unset for exact comparison.
 
 `dependencies` runs `npx madge --circular --json <root>` and counts the cycles — JS/TS only; it degrades to `null` elsewhere.
 
@@ -224,4 +230,4 @@ node quality-gate.mjs collect --preset=lite   # five fundamentals; --preset=full
 
 Benchmark rows report a **percent** delta (absolute nanoseconds aren't readable at a glance) and mark in-band noise as ➖.
 
-Config fields: `root`, `maxFileLines`, `complexityRule` (eslint rule id, default `complexity`), `benchmarkTolerance` (percent band, default `10`), `benchmarkHigherIsBetter` (set `true` for ops/sec), `benchmarkUnit` (display only, default `ms`), `metrics` (active list), `includeExt`, `exclude`, `reports.{coverage,lint,audit,mutation,benchmark}`, `summaryFile`. `--selftest` runs inline asserts (regression blocks, ratchet advances, critical blocks / high warns) and needs no config.
+Config fields: `root`, `maxFileLines`, `complexityRule` (eslint rule id, default `complexity`), `benchmarkTolerance` (percent band, default `10`), `benchmarkHigherIsBetter` (set `true` for ops/sec), `benchmarkUnit` (display only, default `ms`), `metrics` (active list), `includeExt`, `exclude`, `duplicationFormats`, `duplicationIgnore`, `tolerances` (absolute-point band per % metric), `securityBlockLevel` (`"high"` makes high vulns block), `reports.{coverage,lint,audit,mutation,benchmark}` (coverage/lint accept a list), `summaryFile`. `--selftest` runs inline asserts (regression blocks, ratchet advances, critical blocks / high warns) and needs no config.

@@ -22,19 +22,21 @@ Script + config: [scripts/quality-gate.mjs](scripts/quality-gate.mjs). Recipes, 
 
 | Metric | Regresses when | Blocks merge? |
 |---|---|---|
-| Test coverage | drops | yes |
-| Duplication (jscpd) | rises | yes |
+| Test coverage | drops (beyond `tolerances.coverage`, if set) | yes |
+| Duplication (jscpd) | rises (beyond `tolerances.duplication`, if set) | yes |
 | Lint violations | rises | yes |
 | Large files (over line limit) | count rises | yes |
 | Cyclomatic complexity (functions over limit) | count rises | yes |
 | Circular dependencies | count rises | yes |
 | Mutation score (killed mutants %) | drops | yes |
 | Benchmark (per named bench) | slows beyond the tolerance band | yes |
-| Vulnerabilities (`npm audit`) | any `critical` | critical blocks, high warns |
+| Vulnerabilities (`npm audit`) | any `critical` (or `high` with `securityBlockLevel: "high"`) | critical blocks, high warns by default |
 
 A metric with no report is recorded as `null` — it never counts as an improvement, so you cannot game the ratchet by hiding a signal.
 
-**Benchmark is the one tolerant metric** — CI timing is noisy, so it's judged by percent change against a symmetric band (default ±10%), which also keeps a lucky-fast run from ratcheting the baseline. See [REFERENCE.md](REFERENCE.md).
+A metric turned on for the first time enters the baseline on `update` without being judged — turning a metric on never fails the PR that does it.
+
+**Benchmark is tolerant by default** — CI timing is noisy, so it's judged by percent change against a symmetric band (default ±10%), which also keeps a lucky-fast run from ratcheting the baseline. Coverage and duplication can opt into an absolute-point band via `tolerances` for the same reason. See [REFERENCE.md](REFERENCE.md).
 
 E2E and regression tests aren't metrics — they pass or fail. They run as separate required CI jobs, not in the baseline; see [REFERENCE.md](REFERENCE.md) §3b.
 

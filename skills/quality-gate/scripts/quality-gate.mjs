@@ -84,12 +84,24 @@ function countLargeFiles(cfg) {
 }
 
 // Run jscpd and read its json report for the duplication percentage.
+// cfg.duplicationIgnore: globs excluded from this metric only (jscpd honors neither
+// cfg.exclude nor a .jscpdignore file here, so the patterns go through --ignore).
+// cfg.duplicationFormats: jscpd format names to measure. Without it jscpd scans every format
+// it recognizes (markdown, xml, json...) and cfg.includeExt only applies to largeFiles — editing
+// a .md would move the code-duplication metric. jscpd format names are not extensions
+// (.ts is "typescript"), so the key is explicit instead of derived from includeExt.
 function collectDuplication(cfg) {
   const root = cfg.root || ".";
+  const ignore = (cfg.duplicationIgnore || []).join(",");
+  const formats = (cfg.duplicationFormats || []).join(",");
   try {
     execFileSync(
       "npx",
-      ["--yes", "jscpd", root, "--silent", "--reporters", "json", "--output", ".jscpd"],
+      [
+        "--yes", "jscpd@5.2.1", root, "--silent", "--reporters", "json", "--output", ".jscpd",
+        ...(ignore ? ["--ignore", ignore] : []),
+        ...(formats ? ["--format", formats] : []),
+      ],
       { stdio: "ignore" },
     );
     const rep = readJSON(join(".jscpd", "jscpd-report.json"));
@@ -99,42 +111,79 @@ function collectDuplication(cfg) {
   }
 }
 
-// coverage: jest json-summary (total.lines.pct) or a jacoco CSV path.
-function collectCoverage(cfg) {
-  const p = cfg.reports?.coverage;
-  if (!p || !existsSync(p)) return null;
-  if (p.endsWith(".json")) {
-    const j = readJSON(p);
-    return round(j.total?.lines?.pct ?? j.total?.statements?.pct ?? null);
-  }
-  if (p.endsWith(".csv")) {
-    // jacoco CSV: sum INSTRUCTION_MISSED / INSTRUCTION_COVERED across rows.
-    const rows = readFileSync(p, "utf8").trim().split("\n").slice(1);
-    let missed = 0, covered = 0;
-    for (const r of rows) {
+// reports.coverage / reports.lint accept a path or a list of paths — multi-module builds (Maven
+// modules, monorepo packages) emit one report per module. Missing files are skipped; none present
+// = metric absent, same as a single missing path.
+export function reportPaths(p, exists = existsSync) {
+  const paths = (Array.isArray(p) ? p : [p]).filter((x) => x && exists(x));
+  return paths.length ? paths : null;
+}
+
+// jacoco CSV: sum INSTRUCTION_MISSED / INSTRUCTION_COVERED across every row of every file, so
+// multi-module coverage is weighted by size, not an average of percentages.
+export function jacocoCoverage(csvs) {
+  let missed = 0, covered = 0;
+  for (const csv of csvs) {
+    for (const r of csv.trim().split("\n").slice(1)) {
       const c = r.split(",");
       missed += Number(c[3]) || 0;
       covered += Number(c[4]) || 0;
     }
-    const total = missed + covered;
-    return total ? round((covered / total) * 100) : null;
   }
+  const total = missed + covered;
+  return total ? round((covered / total) * 100) : null;
+}
+
+// coverage: jest json-summary (total.lines.pct) or jacoco CSV path(s).
+function collectCoverage(cfg) {
+  const paths = reportPaths(cfg.reports?.coverage);
+  if (!paths) return null;
+  const p = paths[0];
+  if (p.endsWith(".json")) {
+    const j = readJSON(p);
+    return round(j.total?.lines?.pct ?? j.total?.statements?.pct ?? null);
+  }
+  if (p.endsWith(".csv")) return jacocoCoverage(paths.map((x) => readFileSync(x, "utf8")));
   return null;
 }
 
 // lint: eslint json (count messages) or checkstyle xml (count <error> tags).
-function collectLint(cfg) {
-  const p = cfg.reports?.lint;
-  if (!p || !existsSync(p)) return null;
-  const raw = readFileSync(p, "utf8");
-  if (p.endsWith(".json")) {
+// With the complexity metric active, its violations live in the same
+// report — counting them here too would make one complex function regress two metrics, and
+// turning the rule on would regress lint by the whole backlog. `complexityRule` = rule to skip
+// (eslint ruleId; checkstyle is matched by "Cyclomatic" in the source, as in countComplexity).
+export function countLint(raw, ext, complexityRule = null) {
+  if (ext === ".json") {
     const results = JSON.parse(raw);
-    return results.reduce((n, f) => n + (f.messages?.length || 0), 0);
+    return results.reduce(
+      (n, f) => n + (f.messages?.filter((m) => !complexityRule || m.ruleId !== complexityRule).length || 0),
+      0,
+    );
   }
-  if (p.endsWith(".xml")) {
-    return (raw.match(/<error\b/g) || []).length;
+  if (ext === ".xml") {
+    const errors = raw.match(/<error\b[^>]*>/g) || [];
+    return complexityRule ? errors.filter((e) => !/\bsource="[^"]*Cyclomatic/.test(e)).length : errors.length;
   }
   return null;
+}
+
+// Sum `count` over every lint report (one per module); null if none exists or a format is unknown.
+function sumLintReports(cfg, count) {
+  const paths = reportPaths(cfg.reports?.lint);
+  if (!paths) return null;
+  let total = 0;
+  for (const p of paths) {
+    const ext = p.endsWith(".json") ? ".json" : p.endsWith(".xml") ? ".xml" : null;
+    const n = ext ? count(readFileSync(p, "utf8"), ext) : null;
+    if (n == null) return null;
+    total += n;
+  }
+  return total;
+}
+
+function collectLint(cfg, skipComplexity) {
+  const rule = skipComplexity ? cfg.complexityRule || "complexity" : null;
+  return sumLintReports(cfg, (raw, ext) => countLint(raw, ext, rule));
 }
 
 // complexity: count violations of the cyclomatic-complexity rule in the lint report.
@@ -155,18 +204,17 @@ export function countComplexity(raw, ext, rule = "complexity") {
 }
 
 function collectComplexity(cfg) {
-  const p = cfg.reports?.lint; // reuse the lint report (eslint `complexity` / checkstyle CyclomaticComplexity)
-  if (!p || !existsSync(p)) return null;
-  const ext = p.endsWith(".json") ? ".json" : p.endsWith(".xml") ? ".xml" : null;
-  if (!ext) return null;
-  return countComplexity(readFileSync(p, "utf8"), ext, cfg.complexityRule || "complexity");
+  // reuse the lint report(s) (eslint `complexity` / checkstyle CyclomaticComplexity)
+  return sumLintReports(cfg, (raw, ext) => countComplexity(raw, ext, cfg.complexityRule || "complexity"));
 }
 
-// dependencies: number of circular dependency cycles, via madge (JS/TS).
+// dependencies: number of circular dependency cycles, via madge (JS/TS). madge only reads .js by
+// default — a TS project needs a .madgerc next to the config ({"fileExtensions": ["ts","tsx"]}),
+// otherwise it reports 0 cycles without complaining.
 function collectDependencies(cfg) {
   const root = cfg.root || ".";
   try {
-    const out = execFileSync("npx", ["--yes", "madge", "--circular", "--json", root], { encoding: "utf8" });
+    const out = execFileSync("npx", ["--yes", "madge@8", "--circular", "--json", root], { encoding: "utf8" });
     const cycles = JSON.parse(out);
     return Array.isArray(cycles) ? cycles.length : Object.keys(cycles).length;
   } catch {
@@ -268,7 +316,7 @@ function collect(cfg, preset) {
   const active = activeMetrics(cfg, preset);
   if (active.includes("coverage")) metrics.coverage = collectCoverage(cfg);
   if (active.includes("duplication")) metrics.duplication = collectDuplication(cfg);
-  if (active.includes("lint")) metrics.lint = collectLint(cfg);
+  if (active.includes("lint")) metrics.lint = collectLint(cfg, active.includes("complexity"));
   if (active.includes("largeFiles")) metrics.largeFiles = countLargeFiles(cfg);
   if (active.includes("complexity")) metrics.complexity = collectComplexity(cfg);
   if (active.includes("dependencies")) metrics.dependencies = collectDependencies(cfg);
@@ -329,25 +377,42 @@ function compare(baseline, current, opts = {}) {
     if (cur == null && base == null) continue; // metric not in play at all
     let status = "same";
     if (cur != null && base != null) {
-      const worse = dir === "higher_is_better" ? cur < base : cur > base;
+      // cfg.tolerances: percentage metrics (coverage, duplication) carry real noise — a field added
+      // to one module nudges them by hundredths of a point just by resembling its siblings more
+      // closely (common with per-entity CRUD boilerplate). A tolerance
+      // band — same idea as the benchmark band below, just an absolute-point width instead of
+      // a percent-of-value one — keeps the ratchet reacting to real regressions instead of
+      // that noise floor. Baseline still only ever advances on genuine improvement.
+      const tol = (opts.tolerances && opts.tolerances[key]) || 0;
+      const worse = dir === "higher_is_better" ? cur < base - tol : cur > base + tol;
       const better = dir === "higher_is_better" ? cur > base : cur < base;
       if (worse) { regressions.push({ key, base, cur }); status = "regress"; }
       else if (better) { improvements.push({ key, base, cur }); nextBaseline[key] = cur; status = "improve"; }
+    } else if (cur != null) {
+      // Metric newly turned on — start tracking it from this value, never
+      // judge it (same as a new benchmark). Without this, `update` never records it and the metric
+      // stays unratcheted forever.
+      nextBaseline[key] = cur;
+      status = "absent";
     } else {
-      status = "absent"; // one side missing — can't judge
+      status = "absent"; // measured before, missing now — can't judge
     }
     const delta = (cur != null && base != null) ? round(cur - base) : null;
     rows.push({ label: key, base, cur, delta, status });
   }
 
   // security: critical > 0 always blocks; high > 0 warns. Not ratcheted.
+  // cfg.securityBlockLevel: "high" makes high block too (same cut as CVSS >= 7). Unset keeps the
+  // default: critical blocks, high only warns.
   if (c.security) {
+    const highBlocks = opts.securityBlockLevel === "high";
     if (c.security.critical > 0)
       regressions.push({ key: "security.critical", base: 0, cur: c.security.critical });
     if (c.security.high > 0)
-      warnings.push({ key: "security.high", cur: c.security.high });
+      (highBlocks ? regressions : warnings).push({ key: "security.high", base: 0, cur: c.security.high });
+    const highStatus = c.security.high > 0 ? (highBlocks ? "regress" : "warn") : "same";
     rows.push({ label: "security (critical)", base: 0, cur: c.security.critical, delta: c.security.critical, status: c.security.critical > 0 ? "regress" : "same" });
-    rows.push({ label: "security (high)", base: 0, cur: c.security.high, delta: c.security.high, status: c.security.high > 0 ? "warn" : "same" });
+    rows.push({ label: "security (high)", base: 0, cur: c.security.high, delta: c.security.high, status: highStatus });
   }
 
   // benchmark: per-named-bench, percentage change against a tolerance band.
@@ -392,6 +457,8 @@ const compareOpts = (cfg) => ({
     higherIsBetter: cfg.benchmarkHigherIsBetter === true,
     unit: cfg.benchmarkUnit ?? "ms",
   },
+  tolerances: cfg.tolerances ?? {},
+  securityBlockLevel: cfg.securityBlockLevel,
 });
 
 function cmdCollect(cfg, preset, out = "metrics.json") {
@@ -463,6 +530,13 @@ function selftest() {
     { messages: [{ ruleId: "complexity" }] },
   ]);
   assert(countComplexity(eslintJson, ".json", "complexity") === 3, "must count only complexity-rule messages");
+  // multiple reports per metric
+  const header = "GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED\n";
+  assert(jacocoCoverage([header + "g,p,A,10,90\n", header + "g,p,B,90,10\n"]) === 50, "jacoco sums instructions across modules");
+  assert(jacocoCoverage([header + "g,p,A,0,300\n", header + "g,p,B,100,0\n"]) === 75, "larger module weighs more");
+  assert(reportPaths(["a", "b"], (x) => x === "b")?.join() === "b", "missing report is skipped");
+  assert(reportPaths(["a"], () => false) === null, "no report = metric absent");
+  assert(reportPaths("a", () => true)?.join() === "a", "single path still works");
 
   // (h) mutation score drops → regression (higher_is_better)
   const mbase = { metrics: { ...base.metrics, mutation: 60 } };
@@ -513,6 +587,25 @@ function selftest() {
   bench = compareBenchmarks({ ops: 1000 }, { ops: 700 }, { higherIsBetter: true });
   assert(bench.regressions.some((x) => x.key === "benchmark.ops"), "throughput drop must regress when higherIsBetter");
 
+  // (l2) percentage-metric tolerance band (duplication/coverage): same idea as the benchmark
+  // band above, but an absolute-point width instead of a percent-of-value one — a field added
+  // to one entity nudges these by hundredths of a point just by resembling its siblings more.
+  const tolOpts = { tolerances: { duplication: 0.3, coverage: 0.15 } };
+  r = compare(base, { metrics: { ...base.metrics, duplication: 2.4 } }, tolOpts);
+  assert(!r.regressions.some((x) => x.key === "duplication"), "+0.2pp duplication is inside the 0.3pp band — noise, not a regression");
+  r = compare(base, { metrics: { ...base.metrics, duplication: 2.6 } }, tolOpts);
+  assert(r.regressions.some((x) => x.key === "duplication"), "+0.4pp duplication exceeds the band — must regress");
+  r = compare(base, { metrics: { ...base.metrics, coverage: 6.9 } }, tolOpts);
+  assert(!r.regressions.some((x) => x.key === "coverage"), "-0.1pp coverage is inside the 0.15pp band — noise, not a regression");
+  r = compare(base, { metrics: { ...base.metrics, coverage: 6.8 } }, tolOpts);
+  assert(r.regressions.some((x) => x.key === "coverage"), "-0.2pp coverage exceeds the band — must regress");
+  r = compare(base, { metrics: { ...base.metrics, duplication: 2.35 } }, tolOpts);
+  assert(r.nextBaseline.duplication === 2.2, "an in-band (non-improving) value must NOT advance the baseline");
+  r = compare(base, { metrics: { ...base.metrics, duplication: 2.0 } }, tolOpts);
+  assert(r.nextBaseline.duplication === 2.0, "a real improvement still advances the baseline with tolerances configured");
+  r = compare(base, { metrics: { ...base.metrics, duplication: 2.6 } }); // no tolOpts passed
+  assert(r.regressions.some((x) => x.key === "duplication"), "no tolerances configured (opts.tolerances undefined) falls back to exact comparison");
+
   // (m) benchmark report parsing across tools
   assert(parseBenchmarks([{ benchmark: "com.x.parse", primaryMetric: { score: 1.5 } }])["com.x.parse"] === 1.5, "parse JMH");
   assert(parseBenchmarks({ files: [{ groups: [{ benchmarks: [{ name: "v", mean: 2.5 }] }] }] }).v === 2.5, "parse vitest bench");
@@ -522,6 +615,31 @@ function selftest() {
   // benchmark rows render a percent delta with a unit
   const bmd = markdownSummary({ regressions: [], improvements: [], warnings: [], rows: compareBenchmarks(bb, { renderTable: 58.5 }).rows });
   assert(bmd.includes("| benchmark: renderTable | 45 ms | 58.5 ms | +30%"), "benchmark row shows unit and percent delta");
+
+  // (l3) a metric newly turned on enters the baseline without being judged
+  r = compare({ metrics: { coverage: 7 } }, { metrics: { coverage: 7, dependencies: 4 } });
+  assert(r.regressions.length === 0, "a metric absent from the baseline must not regress");
+  assert(r.nextBaseline.dependencies === 4, "a metric absent from the baseline must be recorded by update");
+  r = compare({ metrics: { coverage: 7, dependencies: 4 } }, { metrics: { coverage: 7 } });
+  assert(r.nextBaseline.dependencies === 4, "a metric missing from the current run keeps its baseline");
+
+  // (l4) lint does not double-count complexity violations when the complexity metric is on
+  const eslintRaw = JSON.stringify([{ messages: [{ ruleId: "complexity" }, { ruleId: "no-unused-vars" }] }]);
+  assert(countLint(eslintRaw, ".json") === 2, "without complexity active, lint counts every message");
+  assert(countLint(eslintRaw, ".json", "complexity") === 1, "with complexity active, lint skips the complexity rule");
+  const csRaw = '<file><error source="com.puppycrawl.tools.checkstyle.checks.metrics.CyclomaticComplexityCheck"/>'
+    + '<error source="com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck"/></file>';
+  assert(countLint(csRaw, ".xml") === 2, "checkstyle: without complexity active, lint counts every error");
+  assert(countLint(csRaw, ".xml", "complexity") === 1, "checkstyle: with complexity active, lint skips Cyclomatic errors");
+  assert(countComplexity(csRaw, ".xml") === 1, "checkstyle: complexity counts only Cyclomatic errors");
+
+  // (l5) securityBlockLevel "high": high blocks; unset keeps upstream (high only warns)
+  r = compare(base, { metrics: { ...base.metrics, security: { critical: 0, high: 2 } } });
+  assert(!r.regressions.some((x) => x.key === "security.high") && r.warnings.some((x) => x.key === "security.high"), "default: high only warns");
+  r = compare(base, { metrics: { ...base.metrics, security: { critical: 0, high: 2 } } }, { securityBlockLevel: "high" });
+  assert(r.regressions.some((x) => x.key === "security.high"), "securityBlockLevel high: high blocks");
+  r = compare(base, { metrics: { ...base.metrics, security: { critical: 0, high: 0 } } }, { securityBlockLevel: "high" });
+  assert(r.regressions.length === 0, "securityBlockLevel high: no high, no regression");
 
   console.log("selftest OK");
 }
