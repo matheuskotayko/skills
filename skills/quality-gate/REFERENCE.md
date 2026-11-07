@@ -122,44 +122,121 @@ The comparator is agnostic — only the recipe is missing. Produce a coverage nu
 
 ## 3. CI workflow (GitHub Actions)
 
-`.github/workflows/quality-gate.yml` — check on PRs, advance the ratchet on merge.
+`.github/workflows/quality-gate.yml` — `check` on PRs, advance the ratchet after merge. Collection steps are the Node recipe; swap in your stack's (§2).
 
 ```yaml
 name: quality-gate
 on:
+  # No `paths:` filter — a required check whose workflow never triggers leaves the PR waiting
+  # forever. Skip work inside the job instead (`changes`): a skipped job counts as success.
   pull_request:
+    branches: [main]
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: write   # PR comment
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  # PR touching only docs skips the gate. In a monorepo, emit one output per area (backend,
+  # frontend…) and gate each job on its own — touching the gate itself (script/config/baseline/
+  # workflow) must trigger all of them.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { fetch-depth: 2 }
+      - id: filter
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then echo "code=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          files=$(git diff --name-only HEAD^ HEAD | grep -vE '\.md$' || true)
+          [ -n "$files" ] && echo "code=true" >> "$GITHUB_OUTPUT" || echo "code=false" >> "$GITHUB_OUTPUT"
+
   gate:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: npm }
+      # Pin actions by commit SHA — a tag can be moved, a SHA can't. Keep the version comment so
+      # Dependabot (package-ecosystem: github-actions) bumps both together.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: 22, cache: npm }
 
-      - run: npm ci                                   # deterministic install
+      - run: npm ci
       - run: npx jest --coverage --coverageReporters=json-summary
       - run: npx eslint . -f json -o reports/eslint.json || true
       - run: npm audit --json > reports/npm-audit.json || true
 
       - run: node quality-gate.mjs collect
+      # hand the measured metrics to advance-baseline instead of rebuilding there
+      - if: github.event_name == 'push'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with: { name: metrics, path: metrics.json, retention-days: 1 }
       - run: node quality-gate.mjs check              # exit 1 blocks the PR
 
       - if: always()
         run: cat quality-gate-summary.md >> "$GITHUB_STEP_SUMMARY"
+      - if: always() && github.event_name == 'pull_request'
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: gh pr comment "${{ github.event.pull_request.number }}" --body-file quality-gate-summary.md
 
-      # advance the ratchet only after merge to main
-      - if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  # Protected main rejects a direct push from github-actions, so the baseline advances through
+  # its own PR, merged immediately. Needs "Allow GitHub Actions to create and approve pull
+  # requests" (Settings → Actions → General).
+  advance-baseline:
+    needs: gate
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      statuses: write
+    steps:
+      # Current main, not this run's commit: with two quick merges the first run has already
+      # merged its baseline PR, and branching from the old commit opens this one in conflict.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { ref: main }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: 22 }
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with: { name: metrics }
+      - run: node quality-gate.mjs update
+      - env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          node quality-gate.mjs update
-          git config user.name  github-actions
+          git diff --quiet -- baseline.json && { echo "baseline unchanged"; exit 0; }
+          # run_attempt: a re-run keeps run_id; without it the push hits the previous attempt's branch
+          branch="ci/baseline-${{ github.run_id }}-${{ github.run_attempt }}"
+          git config user.name github-actions
           git config user.email github-actions@github.com
-          git commit -am "chore: advance quality-gate baseline" && git push
+          git switch -c "$branch"
+          git commit -am "chore(quality-gate): advance baseline"
+          git push origin "$branch"
+          # A PR opened with GITHUB_TOKEN triggers no workflow, so required checks would never
+          # report and the merge would hang. The commit only holds the baseline the gate just
+          # measured on main, so mark the required checks green here — one per required check
+          # name (in a monorepo: each area's gate, plus any other required job such as e2e).
+          for check in gate; do
+            gh api "repos/${{ github.repository }}/statuses/$(git rev-parse HEAD)" \
+              -f state=success -f context="$check" -f description="baseline measured by the gate"
+          done
+          gh pr create --base main --head "$branch" --title "chore(quality-gate): advance baseline" \
+            --body "Baseline advanced by run ${{ github.run_id }}."
+          gh pr merge "$branch" --squash --delete-branch
 ```
 
-`check` on the PR compares against the committed `baseline.json`; `update` runs only on the main push so a PR can never advance the ratchet on its own. Add `quality-gate` to the branch's required status checks so the block is enforced.
+`check` on the PR compares against the committed `baseline.json`; `update` runs only after a merge to main, so a PR can never advance the ratchet on its own. Make `gate` a **required status check** in the branch ruleset so the block is enforced — the `changes` job and the status step above exist so that requirement never deadlocks a docs-only PR or the baseline PR.
+
+**Only mark green what the baseline commit can't break.** The baseline PR changes nothing but `baseline.json`, so a status for each required check is honest there. List each required check in the loop by name; never post a blanket success, and never reuse this trick on a PR that touches code.
+
+**Monorepo:** one config + `baseline.json` per area (`frontend/qualitygate.config.json`…), one gate job per area, each uploading its own metrics artifact; `advance-baseline` needs all of them, runs `update` per area and commits every baseline in one PR.
 
 ---
 
@@ -174,9 +251,9 @@ Why keep them out of the gate: the ratchet answers "did a metric get worse?"; a 
   regression:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: npm }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm test              # Node: jest/vitest.  Java: mvn -B test
 
@@ -184,9 +261,9 @@ Why keep them out of the gate: the ratchet answers "did a metric get worse?"; a 
   e2e:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: npm }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps
       - run: npx playwright test     # or cypress; Java: REST-assured / testcontainers
