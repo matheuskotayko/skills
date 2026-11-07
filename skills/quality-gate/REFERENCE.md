@@ -61,6 +61,8 @@ npx jest --coverage --coverageReporters=json-summary
 # lint (+ complexity) → reports/eslint.json  (reports.lint)
 # enable "complexity": ["warn", 10] in eslint config so complexity violations are counted
 npx eslint . -f json -o reports/eslint.json || true   # || true: don't abort collect on lint errors
+# or oxlint: node oxlint-report.mjs reports/oxlint.json  (scripts/oxlint-report.mjs converts to eslint's shape)
+#   set "complexityRule": "eslint(complexity)" and enable complexity in .oxlintrc.json
 
 # security → reports/npm-audit.json  (reports.audit)
 npm audit --json > reports/npm-audit.json || true
