@@ -15,12 +15,13 @@ skills/<name>/
 ```
 
 Flat repo, one skill per directory. No monorepo packages, no nested `AGENTS.md` needed.
+Repo tooling lives in `scripts/` (`lint-skills.mjs`) and CI in `.github/workflows/ci.yml`.
 
 ## House style for a skill
 
 - **Frontmatter**: `name` (kebab-case, matches the directory) and `description` only. Description
   in third person: first sentence what it does, second sentence "Use when [specific triggers]".
-- **`SKILL.md` stays thin** — aim ~20–50 lines, hard cap 100 (see `write-a-skill`'s own rubric).
+- **`SKILL.md` stays thin** — aim ~20–50 lines, hard cap 120 (`write-a-skill`'s rubric says 100; this repo allows a little more, enforced by `scripts/lint-skills.mjs`).
   Quick start first. Anything long — a full recipe table, a report template, a worked example —
   moves to `REFERENCE.md` with a one-line pointer left behind. Don't duplicate content between
   the two.
@@ -58,9 +59,10 @@ immediately and confirm with `git status` / `git check-ignore` before any commit
 
 ## Verification
 
-No build or test suite for the repo itself — plain Markdown plus a handful of zero-dependency
-scripts. Verify a change by:
+No build or test suite for the repo itself — plain Markdown plus zero-dependency scripts. Verify a change by:
 
+- `node scripts/lint-skills.mjs` — frontmatter, `Use when`, line cap, README row + attribution per
+  skill. CI runs it and every `--selftest` on each PR.
 - `node skills/<name>/scripts/<script>.mjs --selftest` for every script touched.
 - A real-project smoke test when the script touches real behavior (filesystem, git, network
   tools) — not selftest alone.

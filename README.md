@@ -10,7 +10,7 @@ Central place to keep skills I use across machines and agents, installable anywh
 
 House rules for adding or editing a skill here — structure, style, privacy, verification — live
 in [AGENTS.md](AGENTS.md), the canonical agent instruction file. [CLAUDE.md](CLAUDE.md) is a thin
-pointer to it for Claude Code.
+pointer to it for Claude Code. `node scripts/lint-skills.mjs` checks those rules and CI runs it with every script's `--selftest` on each PR.
 
 ## Install
 
