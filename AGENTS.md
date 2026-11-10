@@ -40,7 +40,7 @@ Flat repo, one skill per directory. No monorepo packages, no nested `AGENTS.md` 
 1. Write `skills/<name>/SKILL.md` (+ `REFERENCE.md`, `scripts/` as needed).
 2. Add one row to README.md's `## Skills` table.
 3. If the skill isn't fully original work, add a paragraph under README.md's `## Attribution`
-   crediting the source explicitly (see `marclou-review`, `grill-while-coding`, `write-a-skill`,
+   crediting the source explicitly (see `marclou-review`, `write-a-skill`,
    `quality-gate` for the pattern) — silence on sourcing is not acceptable here.
 4. Run every touched script's `--selftest`.
 5. If the skill does real work (scans a filesystem, greps a repo, calls `git`/`gh`), smoke-test
