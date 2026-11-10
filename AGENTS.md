@@ -19,9 +19,13 @@ Repo tooling lives in `scripts/` (`lint-skills.mjs`) and CI in `.github/workflow
 
 ## House style for a skill
 
+Agents building or editing a skill here follow this section — it is the repo's skill-writing
+standard (adapted from Matt Pocock's `write-a-skill`, see README Attribution); no separate
+skill is installed for it.
+
 - **Frontmatter**: `name` (kebab-case, matches the directory) and `description` only. Description
   in third person: first sentence what it does, second sentence "Use when [specific triggers]".
-- **`SKILL.md` stays thin** — aim ~20–50 lines, hard cap 120 (`write-a-skill`'s rubric says 100; this repo allows a little more, enforced by `scripts/lint-skills.mjs`).
+- **`SKILL.md` stays thin** — aim ~20–50 lines, hard cap 120, enforced by `scripts/lint-skills.mjs`.
   Quick start first. Anything long — a full recipe table, a report template, a worked example —
   moves to `REFERENCE.md` with a one-line pointer left behind. Don't duplicate content between
   the two.
@@ -41,7 +45,7 @@ Repo tooling lives in `scripts/` (`lint-skills.mjs`) and CI in `.github/workflow
 1. Write `skills/<name>/SKILL.md` (+ `REFERENCE.md`, `scripts/` as needed).
 2. Add one row to README.md's `## Skills` table.
 3. If the skill isn't fully original work, add a paragraph under README.md's `## Attribution`
-   crediting the source explicitly (see `marclou-review`, `write-a-skill`,
+   crediting the source explicitly (see `marclou-review` and
    `quality-gate` for the pattern) — silence on sourcing is not acceptable here.
 4. Run every touched script's `--selftest`.
 5. If the skill does real work (scans a filesystem, greps a repo, calls `git`/`gh`), smoke-test
