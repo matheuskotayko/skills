@@ -28,15 +28,17 @@ npx skills add matheuskotayko/skills --skill <skill-name>
 
 ## Skills
 
+Renamed on 2026-11: `marclou-review`→`landing-review`, `pentest-me`→`self-pentest`, `brag-me`→`brag-doc`, `profile-me`→`career-profile`, `organize-agent-context`→`agent-context`. Reinstall with the new name.
+
 | Skill | Description |
 |---|---|
-| [marclou-review](skills/marclou-review/SKILL.md) | Reviews a landing page / product page / marketing copy against Marc Lou's 31 rules for viral products. |
-| [pentest-me](skills/pentest-me/SKILL.md) | Attacks your own system as a red team before it ships and scores each attack by how many independent layers stop it (defense in depth), then writes fix reports. Maps the HTTP attack surface from code and covers 12 vectors (IDOR, mass assignment, injection, SSRF, XSS/CSRF, path traversal, upload, XXE, and more). Includes a static-audit mode (stack detection, isolation-mechanism mapping, frontend/backend role cross-check, every-handler walk) that emits a file-by-file report with ready-to-paste GitHub issues and an optional PDF. |
+| [landing-review](skills/landing-review/SKILL.md) | Reviews a landing page / product page / marketing copy against Marc Lou's 31 rules for viral products. |
+| [self-pentest](skills/self-pentest/SKILL.md) | Attacks your own system as a red team before it ships and scores each attack by how many independent layers stop it (defense in depth), then writes fix reports. Maps the HTTP attack surface from code and covers 12 vectors (IDOR, mass assignment, injection, SSRF, XSS/CSRF, path traversal, upload, XXE, and more). Includes a static-audit mode (stack detection, isolation-mechanism mapping, frontend/backend role cross-check, every-handler walk) that emits a file-by-file report with ready-to-paste GitHub issues and an optional PDF. |
 | [quality-gate](skills/quality-gate/SKILL.md) | Sets up a ratchet quality gate — a PR may add code but never regress a metric (coverage, duplication, lint, large files, complexity, dependencies, mutation, benchmarks, vulns) — plus an AI babysitting loop that drives the PR to green. Optional noise bands for coverage/duplication (`tolerances`), multi-module reports, `securityBlockLevel`, an `osv-gate` severity cut for vulnerabilities on any stack, and an `oxlint-report` converter. |
-| [brag-me](skills/brag-me/SKILL.md) | Turns your real contributions to a project into evidence-backed resume bullets, pulled from git history, merged PRs, and quality-gate metric trends. |
-| [profile-me](skills/profile-me/SKILL.md) | Writes professional-branding content — LinkedIn, résumé, portfolio, Lattes — from validated facts, using the X-Y-Z method, honest metrics, per-channel formatting, and no cross-section redundancy. Chains with `brag-me` (which harvests the facts). |
+| [brag-doc](skills/brag-doc/SKILL.md) | Turns your real contributions to a project into evidence-backed resume bullets, pulled from git history, merged PRs, and quality-gate metric trends. |
+| [career-profile](skills/career-profile/SKILL.md) | Writes professional-branding content — LinkedIn, résumé, portfolio, Lattes — from validated facts, using the X-Y-Z method, honest metrics, per-channel formatting, and no cross-section redundancy. Chains with `brag-doc` (which harvests the facts). |
 | [secret-scan](skills/secret-scan/SKILL.md) | Scans the working tree (git-aware) and full git history for exposed secrets — API keys, tokens, private keys, passwords, and insecure `${VAR:-default}` fallbacks — redacts every match, and exits non-zero as a CI/pre-commit gate. |
-| [organize-agent-context](skills/organize-agent-context/SKILL.md) | Reorganizes a repo's AI-agent instruction files into a canonical layout — one AGENTS.md per directory as the single source of truth, deep topic docs split under docs/, and project skills consolidated in .claude/skills/, with a CLAUDE.md pointer only where Claude Code still needs one. Splits a bloated file by altitude (rules stay, narrative moves), resolves CLAUDE.md/AGENTS.md drift, numbers the invariants with what guarantees each one, routes tasks to docs, and prunes stale context. |
+| [agent-context](skills/agent-context/SKILL.md) | Reorganizes a repo's AI-agent instruction files into a canonical layout — one AGENTS.md per directory as the single source of truth, deep topic docs split under docs/, and project skills consolidated in .claude/skills/, with a CLAUDE.md pointer only where Claude Code still needs one. Splits a bloated file by altitude (rules stay, narrative moves), resolves CLAUDE.md/AGENTS.md drift, numbers the invariants with what guarantees each one, routes tasks to docs, and prunes stale context. |
 
 ## Quality gate — metric waves
 
@@ -52,18 +54,18 @@ The `quality-gate` ratchet grew in waves; a project can adopt them in order as i
 
 ## Attribution
 
-`marclou-review` is not original work — it packages the 31 rules from Marc Lou's newsletter as an agent-checkable rubric. Full credit and original writeup: [31 Principles of a Viral Product](https://newsletter.marclou.com/p/31-principles-of-a-viral-product).
+`landing-review` is not original work — it packages the 31 rules from Marc Lou's newsletter as an agent-checkable rubric. Full credit and original writeup: [31 Principles of a Viral Product](https://newsletter.marclou.com/p/31-principles-of-a-viral-product).
 
 The skill-writing standard in [AGENTS.md](AGENTS.md) (thin `SKILL.md`, progressive disclosure, "Use when" descriptions, bundled scripts) is adapted from Matt Pocock's `write-a-skill`. Full credit: [mattpocock/skills](https://github.com/mattpocock/skills/blob/main/skills/productivity/write-a-skill/SKILL.md).
 
-`pentest-me` is original work — a defense-in-depth pentest method that scores attacks by layer depth rather than running a checklist scanner.
+`self-pentest` is original work — a defense-in-depth pentest method that scores attacks by layer depth rather than running a checklist scanner.
 
 `quality-gate` implements the ratchet quality-gate and AI-babysitting method from Lucas Montano's video [Como garantir qualidade de código com IA](https://youtu.be/qToBgU8K4Ms). The concept (baseline + no-regression ratchet + babysitting) is his; the packaged script, per-stack recipes, and CI workflow are this repo's implementation.
 
-`brag-me` is original work — the automation is this repo's. The underlying "brag document" idea is Julia Evans' ([jvns.ca/blog/brag-documents](https://jvns.ca/blog/brag-documents/)).
+`brag-doc` is original work — the automation is this repo's. The underlying "brag document" idea is Julia Evans' ([jvns.ca/blog/brag-documents](https://jvns.ca/blog/brag-documents/)).
 
-`profile-me` is original work. The X-Y-Z bullet method it uses is Laszlo Bock's (Google) formula; the LinkedIn field mechanics are common platform practice, distilled.
+`career-profile` is original work. The X-Y-Z bullet method it uses is Laszlo Bock's (Google) formula; the LinkedIn field mechanics are common platform practice, distilled.
 
 `secret-scan` is original work — a named-pattern secret scanner in the spirit of gitleaks/trufflehog, git-history-aware and redaction-first, packaged as a standalone skill.
 
-`organize-agent-context` is original work — a canonical layout and altitude-split method for CLAUDE.md/AGENTS.md instruction files, informed by Claude Code's documented memory-loading mechanics. Used to write this repo's own [AGENTS.md](AGENTS.md)/[CLAUDE.md](CLAUDE.md).
+`agent-context` is original work — a canonical layout and altitude-split method for CLAUDE.md/AGENTS.md instruction files, informed by Claude Code's documented memory-loading mechanics. Used to write this repo's own [AGENTS.md](AGENTS.md)/[CLAUDE.md](CLAUDE.md).

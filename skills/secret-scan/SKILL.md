@@ -5,7 +5,7 @@ description: Scan a codebase and its git history for exposed secrets — API key
 
 # Secret Scan
 
-Finds committed secrets — the "exposed key" a pentest can't model as layers, because it's presence/absence, not depth. Pairs with [pentest-me](../pentest-me/SKILL.md): pentest-me attacks layers, this one hunts leaked credentials.
+Finds committed secrets — the "exposed key" a pentest can't model as layers, because it's presence/absence, not depth. Pairs with [self-pentest](../self-pentest/SKILL.md): self-pentest attacks layers, this one hunts leaked credentials.
 
 ## Quick start
 

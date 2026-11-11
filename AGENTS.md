@@ -45,7 +45,7 @@ skill is installed for it.
 1. Write `skills/<name>/SKILL.md` (+ `REFERENCE.md`, `scripts/` as needed).
 2. Add one row to README.md's `## Skills` table.
 3. If the skill isn't fully original work, add a paragraph under README.md's `## Attribution`
-   crediting the source explicitly (see `marclou-review` and
+   crediting the source explicitly (see `landing-review` and
    `quality-gate` for the pattern) — silence on sourcing is not acceptable here.
 4. Run every touched script's `--selftest`.
 5. If the skill does real work (scans a filesystem, greps a repo, calls `git`/`gh`), smoke-test
@@ -56,7 +56,7 @@ skill is installed for it.
 
 This repo is public and installable by anyone. Never commit a user's real project names,
 metrics, client names, salary figures, tokens, or keys into a skill, its `REFERENCE.md`, or a
-worked example — examples are anonymized/fictional (see `profile-me`). A skill that needs the
+worked example — examples are anonymized/fictional (see `career-profile`). A skill that needs the
 user's real facts as input reads them from the user's own private, gitignored file; it never
 ships them inside the skill. If private material ever lands in this repo, `.gitignore` it
 immediately and confirm with `git status` / `git check-ignore` before any commit.

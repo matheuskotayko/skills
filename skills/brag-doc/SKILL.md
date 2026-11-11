@@ -1,5 +1,5 @@
 ---
-name: brag-me
+name: brag-doc
 description: Turn your real contributions to a project into resume-ready bullets, pulled from git history, merged PRs, and quality-gate metric trends so every claim is evidence-backed. Use when the user wants a brag document, resume/CV bullets, a work log of what they shipped, help describing a job's impact, or to remember what they did on a project before they forget.
 ---
 
@@ -9,7 +9,7 @@ description: Turn your real contributions to a project into resume-ready bullets
 
 Facts first, prose second. The script gathers verifiable evidence; you distill it — never invent a number the evidence doesn't support.
 
-1. **Collect** — run [scripts/brag-me.mjs](scripts/brag-me.mjs) `collect --author=<your git name/email>` in the repo. It writes `brag-facts.json`: your commits (by type), diff totals, merged PRs, and the coverage/duplication trend from any committed `baseline.json`.
+1. **Collect** — run [scripts/brag-doc.mjs](scripts/brag-doc.mjs) `collect --author=<your git name/email>` in the repo. It writes `brag-facts.json`: your commits (by type), diff totals, merged PRs, and the coverage/duplication trend from any committed `baseline.json`.
 2. **Interview** — for impact git can't see (business outcome, scale, latency, team size), ask the user. Mark those as self-reported.
 3. **Write two files** — `brag.md` (private log, every bullet linked to a commit/PR/number) and `resume.md` (distilled, XYZ format, sanitized).
 

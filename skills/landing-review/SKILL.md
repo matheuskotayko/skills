@@ -1,5 +1,5 @@
 ---
-name: marclou-review
+name: landing-review
 description: Review a landing page, product page, or marketing copy against Marc Lou's 31 rules for viral products (pricing, headline, hero, CTA, color, paywall, etc). Use when user asks to review/audit a landing page, marketing copy, product positioning, or mentions "marclou review".
 ---
 

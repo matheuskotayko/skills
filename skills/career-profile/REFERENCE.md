@@ -25,7 +25,7 @@ Order is flexible; result and proof must always appear together. "Implementei AP
 3. **A specific, true qualitative outcome** — real user feedback, a guaranteed system behavior ("compatible with Meta Quest" proves robustness without a usage metric).
 4. **Never** a vague claim ("improved quality") with none of the above.
 
-If while drafting you realize you inferred a number the source doesn't contain (e.g. "90% accuracy" that isn't in the material), **self-correct and flag it** before finalizing. Same discipline as [brag-me](../brag-me/SKILL.md) — measured facts come from git/PRs/reports; anything else is labeled or asked.
+If while drafting you realize you inferred a number the source doesn't contain (e.g. "90% accuracy" that isn't in the material), **self-correct and flag it** before finalizing. Same discipline as [brag-doc](../brag-doc/SKILL.md) — measured facts come from git/PRs/reports; anything else is labeled or asked.
 
 **A number with no auditable source is a different problem than no number.** If the user hands over a figure from memory — no commit, no report, no `brag.md` behind it ("I improved performance by 300%") — don't silently write it in as fact. Confirm explicitly: *"Is this number something you can back up if asked in an interview?"* Only write it in once confirmed, and mark it **self-reported** in the private source file (same label the interview facts get) so it's never confused with a measured one later.
 
@@ -93,7 +93,7 @@ Generic mechanics for the platform — what each field is for. (Common LinkedIn 
 
 The skill needs the user's **validated facts** — it does not invent them. Accept any of:
 
-- A `brag.md` produced by [brag-me](../brag-me/SKILL.md) (git-harvested, evidence-linked).
+- A `brag.md` produced by [brag-doc](../brag-doc/SKILL.md) (git-harvested, evidence-linked).
 - A hand-written validated-facts doc (projects, roles, real metrics, stacks).
 - A short interview, when neither exists.
 

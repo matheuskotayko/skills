@@ -1,5 +1,5 @@
 ---
-name: organize-agent-context
+name: agent-context
 description: Reorganize a repo's AI-agent instruction files into a canonical layout — one AGENTS.md per directory as the single source of truth, deep topic docs split under docs/, and project skills consolidated in .claude/skills/, plus an optional CLAUDE.md pointer only where Claude Code needs one — then makes the canonical file actionable (numbered invariants with what guarantees them, a task-to-doc routing table, an upkeep protocol) and prunes stale context agents would read as current. Use when a CLAUDE.md or AGENTS.md is bloated, duplicated, or drifted out of sync, when setting up agent instructions for a repo or monorepo, or when the user mentions organizing, splitting, or cleaning up AI context, CLAUDE.md, or AGENTS.md.
 ---
 

@@ -104,9 +104,9 @@ Never convert a self-reported guess into a hard number in `resume.md`. "~30% few
 ## 6. Script usage
 
 ```bash
-node brag-me.mjs collect --author="you@example.com"            # current repo
-node brag-me.mjs collect --author="Your Name" --since=2025-01-01 --repo=../app --baseline=baseline.json
-node brag-me.mjs --selftest
+node brag-doc.mjs collect --author="you@example.com"            # current repo
+node brag-doc.mjs collect --author="Your Name" --since=2025-01-01 --repo=../app --baseline=baseline.json
+node brag-doc.mjs --selftest
 ```
 
 Flags: `--author` (required — git name or email), `--since` (YYYY-MM-DD), `--repo` (default `.`), `--baseline` (path to a committed `baseline.json`, default `baseline.json`). Writes `brag-facts.json`. `pullRequests` needs `gh` authed on a GitHub repo; `baselineTrend` needs a `baseline.json` with history (produced by the [quality-gate](../quality-gate/SKILL.md) skill). Both degrade to `null` when absent.

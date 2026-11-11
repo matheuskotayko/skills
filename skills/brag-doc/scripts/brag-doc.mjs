@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// brag-me.mjs — collect verifiable contribution facts from git/gh for a brag doc.
+// brag-doc.mjs — collect verifiable contribution facts from git/gh for a brag doc.
 // Zero dependencies, Node >= 18, ESM. It gathers EVIDENCE, not prose — the agent
 // distills brag.md / resume.md from the facts.json this writes. It never invents
 // numbers: a signal that isn't in git/gh is simply absent.
@@ -149,7 +149,7 @@ const arg = (name, def) => {
 };
 
 if (argv[0] !== "collect") {
-  console.error("usage: brag-me.mjs collect --author=<name|email> [--since=YYYY-MM-DD] [--repo=.] [--baseline=baseline.json] | --selftest");
+  console.error("usage: brag-doc.mjs collect --author=<name|email> [--since=YYYY-MM-DD] [--repo=.] [--baseline=baseline.json] | --selftest");
   process.exit(2);
 }
 
