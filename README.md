@@ -1,71 +1,74 @@
 # skills
 
-Personal collection of agent skills (SKILL.md files) for Claude Code, Codex, and other agents that support the [Agent Skills](https://github.com/vercel-labs/skills) format.
+[![ci](https://github.com/matheuskotayko/skills/actions/workflows/ci.yml/badge.svg)](https://github.com/matheuskotayko/skills/actions/workflows/ci.yml)
 
-## Why this repo
-
-Central place to keep skills I use across machines and agents, installable anywhere with one command instead of copy-pasting files into each tool's config folder.
-
-## Repo conventions
-
-House rules for adding or editing a skill here — structure, style, privacy, verification — live
-in [AGENTS.md](AGENTS.md), the canonical agent instruction file. [CLAUDE.md](CLAUDE.md) is a thin
-pointer to it for Claude Code. `node scripts/lint-skills.mjs` checks those rules and CI runs it with every script's `--selftest` on each PR.
+Installable [Agent Skills](https://github.com/vercel-labs/skills) for Claude Code, Codex, Cursor, and any agent that reads the `SKILL.md` format. Each skill is a small, focused playbook. Some ship a zero-dependency Node script, so the agent runs a tested tool instead of improvising.
 
 ## Install
 
-Install everything:
-
-```
-npx skills add matheuskotayko/skills
-```
-
-Install a specific skill:
-
-```
-npx skills add matheuskotayko/skills --skill <skill-name>
+```bash
+npx skills add matheuskotayko/skills                        # all skills
+npx skills add matheuskotayko/skills --skill quality-gate   # one skill
 ```
 
 ## Skills
 
-Renamed on 2026-11: `marclou-review`→`landing-review`, `pentest-me`→`self-pentest`, `brag-me`→`brag-doc`, `profile-me`→`career-profile`, `organize-agent-context`→`agent-context`. Reinstall with the new name.
+### Code quality and security
 
-| Skill | Description |
+| Skill | What it does |
 |---|---|
-| [landing-review](skills/landing-review/SKILL.md) | Reviews a landing page / product page / marketing copy against Marc Lou's 31 rules for viral products. |
-| [self-pentest](skills/self-pentest/SKILL.md) | Attacks your own system as a red team before it ships and scores each attack by how many independent layers stop it (defense in depth), then writes fix reports. Maps the HTTP attack surface from code and covers 12 vectors (IDOR, mass assignment, injection, SSRF, XSS/CSRF, path traversal, upload, XXE, and more). Includes a static-audit mode (stack detection, isolation-mechanism mapping, frontend/backend role cross-check, every-handler walk) that emits a file-by-file report with ready-to-paste GitHub issues and an optional PDF. |
-| [quality-gate](skills/quality-gate/SKILL.md) | Sets up a ratchet quality gate — a PR may add code but never regress a metric (coverage, duplication, lint, large files, complexity, dependencies, mutation, benchmarks, vulns) — plus an AI babysitting loop that drives the PR to green. Optional noise bands for coverage/duplication (`tolerances`), multi-module reports, `securityBlockLevel`, an `osv-gate` severity cut for vulnerabilities on any stack, and an `oxlint-report` converter. |
-| [brag-doc](skills/brag-doc/SKILL.md) | Turns your real contributions to a project into evidence-backed resume bullets, pulled from git history, merged PRs, and quality-gate metric trends. |
-| [career-profile](skills/career-profile/SKILL.md) | Writes professional-branding content — LinkedIn, résumé, portfolio, Lattes — from validated facts, using the X-Y-Z method, honest metrics, per-channel formatting, and no cross-section redundancy. Chains with `brag-doc` (which harvests the facts). |
-| [secret-scan](skills/secret-scan/SKILL.md) | Scans the working tree (git-aware) and full git history for exposed secrets — API keys, tokens, private keys, passwords, and insecure `${VAR:-default}` fallbacks — redacts every match, and exits non-zero as a CI/pre-commit gate. |
-| [agent-context](skills/agent-context/SKILL.md) | Reorganizes a repo's AI-agent instruction files into a canonical layout — one AGENTS.md per directory as the single source of truth, deep topic docs split under docs/, and project skills consolidated in .claude/skills/, with a CLAUDE.md pointer only where Claude Code still needs one. Splits a bloated file by altitude (rules stay, narrative moves), resolves CLAUDE.md/AGENTS.md drift, numbers the invariants with what guarantees each one, routes tasks to docs, and prunes stale context. |
+| [quality-gate](skills/quality-gate/SKILL.md) | Ratchet CI gate: a PR may add code but never regress a metric. Also includes a loop that drives the PR to green. |
+| [self-pentest](skills/self-pentest/SKILL.md) | Red-teams your own app before release. It scores each attack by how many independent layers stop it, then writes fix reports and ready-to-paste issues. |
+| [secret-scan](skills/secret-scan/SKILL.md) | Finds exposed keys, tokens, and passwords in the working tree and git history. It redacts every match and fails CI. |
 
-## Quality gate — metric waves
+### Agent workflow
 
-The `quality-gate` ratchet grew in waves; a project can adopt them in order as it matures. Same engine throughout — pick how much runs with `--preset=lite|full`, or an explicit `metrics` list in the config.
+| Skill | What it does |
+|---|---|
+| [agent-context](skills/agent-context/SKILL.md) | Reorganizes `AGENTS.md` / `CLAUDE.md` files into one canonical source per directory. Splits out deep docs and prunes stale context. |
 
-| Stage | Metrics | Notes |
-|---|---|---|
-| Base (`--preset=lite`) | coverage, duplication, lint, large files, vulnerabilities | The five fundamentals; no extra tooling needed. |
-| Wave 1 | cyclomatic complexity, circular dependencies | Cheap, high signal; complexity reuses the lint report, dependencies via `madge`. |
-| Wave 2 | mutation score | Slow (reruns the suite per mutant) — only meaningful once the test suite is solid. Own CI job. |
-| Wave 3 | microbenchmarks | Per-named-bench timing, judged against a symmetric tolerance band (default ±10%) because CI timing is noisy. Own CI job. |
-| Pass/fail (not ratcheted) | e2e, regression, `osv-gate` (vulnerabilities on any stack) | Binary suites, run as separate required CI jobs — not `baseline.json` metrics. See [REFERENCE §3b](skills/quality-gate/REFERENCE.md). |
+### Career and product
+
+| Skill | What it does |
+|---|---|
+| [brag-doc](skills/brag-doc/SKILL.md) | Turns git history, merged PRs, and metric trends into evidence-backed résumé bullets. |
+| [career-profile](skills/career-profile/SKILL.md) | Writes LinkedIn, résumé, and portfolio copy from validated facts, using the X-Y-Z method. Chains with `brag-doc`. |
+| [landing-review](skills/landing-review/SKILL.md) | Audits a landing page or marketing copy against Marc Lou's 31 rules for viral products. |
+
+## Quality gate at a glance
+
+One engine, adopted in stages. `--preset=lite` runs the base metrics and `--preset=full` runs everything.
+
+| Stage | Metrics |
+|---|---|
+| Base (`lite`) | coverage, duplication, lint, large files, vulnerabilities |
+| Wave 1 | cyclomatic complexity, circular dependencies |
+| Wave 2 | mutation score (own CI job) |
+| Wave 3 | microbenchmarks, judged against a ±10% noise band (own CI job) |
+| Pass/fail | e2e, regression, `osv-gate` (vulnerabilities on any stack) |
+
+Details, per-stack recipes, and the GitHub Actions workflow: [quality-gate/REFERENCE.md](skills/quality-gate/REFERENCE.md).
+
+## Contributing
+
+House rules for adding or editing a skill (structure, style, privacy, verification) live in [AGENTS.md](AGENTS.md). [CLAUDE.md](CLAUDE.md) is only a pointer to it. Before opening a PR:
+
+```bash
+node scripts/lint-skills.mjs                                  # house rules for every skill
+for f in scripts/*.mjs skills/*/scripts/*.mjs; do node "$f" --selftest; done
+```
+
+CI runs both on every PR.
+
+> **Renamed in Nov 2026.** `marclou-review` became `landing-review`, `pentest-me` became `self-pentest`, `brag-me` became `brag-doc`, `profile-me` became `career-profile`, and `organize-agent-context` became `agent-context`. Reinstall with the new names.
 
 ## Attribution
 
-`landing-review` is not original work — it packages the 31 rules from Marc Lou's newsletter as an agent-checkable rubric. Full credit and original writeup: [31 Principles of a Viral Product](https://newsletter.marclou.com/p/31-principles-of-a-viral-product).
+Credit where the ideas come from:
 
-The skill-writing standard in [AGENTS.md](AGENTS.md) (thin `SKILL.md`, progressive disclosure, "Use when" descriptions, bundled scripts) is adapted from Matt Pocock's `write-a-skill`. Full credit: [mattpocock/skills](https://github.com/mattpocock/skills/blob/main/skills/productivity/write-a-skill/SKILL.md).
-
-`self-pentest` is original work — a defense-in-depth pentest method that scores attacks by layer depth rather than running a checklist scanner.
-
-`quality-gate` implements the ratchet quality-gate and AI-babysitting method from Lucas Montano's video [Como garantir qualidade de código com IA](https://youtu.be/qToBgU8K4Ms). The concept (baseline + no-regression ratchet + babysitting) is his; the packaged script, per-stack recipes, and CI workflow are this repo's implementation.
-
-`brag-doc` is original work — the automation is this repo's. The underlying "brag document" idea is Julia Evans' ([jvns.ca/blog/brag-documents](https://jvns.ca/blog/brag-documents/)).
-
-`career-profile` is original work. The X-Y-Z bullet method it uses is Laszlo Bock's (Google) formula; the LinkedIn field mechanics are common platform practice, distilled.
-
-`secret-scan` is original work — a named-pattern secret scanner in the spirit of gitleaks/trufflehog, git-history-aware and redaction-first, packaged as a standalone skill.
-
-`agent-context` is original work — a canonical layout and altitude-split method for CLAUDE.md/AGENTS.md instruction files, informed by Claude Code's documented memory-loading mechanics. Used to write this repo's own [AGENTS.md](AGENTS.md)/[CLAUDE.md](CLAUDE.md).
+- **`quality-gate`** implements Lucas Montano's ratchet and AI-babysitting method from [Como garantir qualidade de código com IA](https://youtu.be/qToBgU8K4Ms). The concept is his. The script, recipes, and CI workflow are this repo's.
+- **`landing-review`** packages Marc Lou's [31 Principles of a Viral Product](https://newsletter.marclou.com/p/31-principles-of-a-viral-product) as an agent-checkable rubric.
+- **`brag-doc`** automates Julia Evans' [brag document](https://jvns.ca/blog/brag-documents/) idea.
+- **`career-profile`** uses Laszlo Bock's X-Y-Z bullet formula, plus common LinkedIn practice, distilled.
+- **`self-pentest`**, **`secret-scan`**, and **`agent-context`** are original work. `secret-scan` follows the spirit of gitleaks and trufflehog. `agent-context` builds on Claude Code's documented memory loading, and this repo's own `AGENTS.md` was written with it.
+- The skill-writing standard in [AGENTS.md](AGENTS.md) is adapted from Matt Pocock's [`write-a-skill`](https://github.com/mattpocock/skills/blob/main/skills/productivity/write-a-skill/SKILL.md).
