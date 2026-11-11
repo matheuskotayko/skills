@@ -7,6 +7,7 @@
 [![CI](https://github.com/matheuskotayko/skills/actions/workflows/ci.yml/badge.svg)](https://github.com/matheuskotayko/skills/actions/workflows/ci.yml)
 [![Agent Skills](https://img.shields.io/badge/format-Agent%20Skills-blue)](https://github.com/vercel-labs/skills)
 [![Node](https://img.shields.io/badge/node-18+-blue)](#how-a-skill-is-built)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ## Why these skills
 
@@ -88,7 +89,7 @@ scripts/
 
 ## Contributing
 
-House rules for adding or editing a skill (structure, style, privacy, verification) live in [AGENTS.md](AGENTS.md). [CLAUDE.md](CLAUDE.md) only points to it. Before opening a PR:
+House rules for adding or editing a skill (structure, style, privacy, verification) live in [AGENTS.md](AGENTS.md). Before opening a PR:
 
 ```bash
 node scripts/lint-skills.mjs
@@ -105,6 +106,10 @@ CI runs both on every push and PR.
 - **`career-profile`** uses Laszlo Bock's X-Y-Z bullet formula, plus common LinkedIn practice, distilled.
 - **`self-pentest`**, **`secret-scan`**, and **`agent-context`** are original work. `secret-scan` follows the spirit of gitleaks and trufflehog. `agent-context` builds on Claude Code's documented memory loading, and this repo's own `AGENTS.md` was written with it.
 - The skill-writing standard in [AGENTS.md](AGENTS.md) is adapted from Matt Pocock's [`write-a-skill`](https://github.com/mattpocock/skills/blob/main/skills/productivity/write-a-skill/SKILL.md).
+
+## License
+
+MIT. See [LICENSE](LICENSE). Changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 
 ## Acknowledgements
 
