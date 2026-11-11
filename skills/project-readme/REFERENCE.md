@@ -85,4 +85,6 @@ actually published.
 - [ ] Nothing in the README claims a feature or number the repo can't back.
 - [ ] License stated, or its absence reported to the user.
 - [ ] Credits from the old README preserved.
+- [ ] If tooling ships the README (`grep -rn README` in build scripts), no content was moved out of it.
+- [ ] Numbers carried over from the old README (test counts, versions, timeouts) were checked against the code or changelog, and stale ones were flagged to the user.
 - [ ] Written in the project's language.

@@ -31,7 +31,10 @@ actually run.
 6. **Verify.** Run every install and quick-start command you wrote, or say plainly which ones
    you couldn't. Check every relative link and badge URL. Make sure nothing in the README claims
    a feature the code lacks.
-7. **Keep what is real.** When rewriting, keep the existing README's true content: attribution,
+7. **Check who else reads the README.** Run `grep -rn README` over build, packaging, and docs
+   tooling. If the README is copied into a release, such as a `LEIA-ME`, a help tab, or a package
+   description, it is a user manual. Restructure it in place and don't move content to `docs/`.
+8. **Keep what is real.** When rewriting, keep the existing README's true content: attribution,
    install quirks, warnings. Restructure it. Don't drop it.
 
 ## Rules
