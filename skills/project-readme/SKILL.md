@@ -16,7 +16,7 @@ actually run.
    node <skill-dir>/scripts/readme-facts.mjs           # writes readme-facts.json
    ```
    It reports manifests and package manager, run scripts, binaries, license, git remote, latest
-   tag, CI workflows, Docker, `docs/`, community files, images, and the existing README's
+   tag, monorepo workspaces, CI workflows, Docker, `docs/`, community files, images, and the existing README's
    headings. Then read the code entry points yourself. The script gives facts, not the pitch.
 2. **Classify the project.** Library, CLI, app/service, framework or plugin, monorepo, or
    collection/docs. The type decides which sections lead. See [REFERENCE.md](REFERENCE.md)

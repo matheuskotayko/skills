@@ -68,6 +68,8 @@ export function nodeFacts(pkg) {
     private: pkg.private === true,
     scripts,
     homepage: pkg.homepage ?? null,
+    // npm/yarn/bun workspaces (array or { packages: [] }) — a monorepo signal
+    workspaces: Array.isArray(pkg.workspaces) ? pkg.workspaces : pkg.workspaces?.packages ?? [],
   };
 }
 
@@ -124,6 +126,8 @@ function collect(root) {
     community: ["CHANGELOG.md", "CONTRIBUTING.md", "SECURITY.md", "CODE_OF_CONDUCT.md", "AGENTS.md"].filter(has),
     images,
     existingReadme: readmeFile ? { file: readmeFile, headings: headings(read(join(root, readmeFile))) } : null,
+    monorepo: Boolean(pkg && nodeFacts(pkg).workspaces.length) || files.includes("pnpm-workspace.yaml")
+      || /^\[workspace\]/m.test(read(join(root, "Cargo.toml")) || "") || files.includes("go.work"),
     commits: Number(git(root, ["rev-list", "--count", "HEAD"])) || 0,
   };
 }
@@ -144,6 +148,9 @@ function selftest() {
   const nf = nodeFacts({ name: "x", bin: { x: "cli.js" }, scripts: { dev: "", test: "", postinstall: "" } });
   assert.deepEqual(nf.bin, ["x"]);
   assert.deepEqual(nf.scripts, ["dev", "test"]);
+  assert.deepEqual(nodeFacts({ workspaces: ["packages/a"] }).workspaces, ["packages/a"]);
+  assert.deepEqual(nodeFacts({ workspaces: { packages: ["apps/*"] } }).workspaces, ["apps/*"]);
+  assert.deepEqual(nf.workspaces, []);
   assert.equal(tomlField('[package]\nname = "tool"\nversion = "0.3.1"', "version"), "0.3.1");
   assert.equal(tomlField("", "name"), null);
   assert.deepEqual(headings("# A\n```\n# not a heading\n```\n## B\ntext"), ["# A", "## B"]);
