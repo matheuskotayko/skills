@@ -1,43 +1,69 @@
-# skills
+<h1 align="center">skills</h1>
 
-[![ci](https://github.com/matheuskotayko/skills/actions/workflows/ci.yml/badge.svg)](https://github.com/matheuskotayko/skills/actions/workflows/ci.yml)
+> Installable playbooks for AI coding agents. Ask your agent to "set up a
+> quality gate" or "pentest this before we ship", and it follows a tested
+> method instead of improvising one.
 
-Installable [Agent Skills](https://github.com/vercel-labs/skills) for Claude Code, Codex, Cursor, and any agent that reads the `SKILL.md` format. Each skill is a small, focused playbook. Some ship a zero-dependency Node script, so the agent runs a tested tool instead of improvising.
+[![CI](https://github.com/matheuskotayko/skills/actions/workflows/ci.yml/badge.svg)](https://github.com/matheuskotayko/skills/actions/workflows/ci.yml)
+[![Agent Skills](https://img.shields.io/badge/format-Agent%20Skills-blue)](https://github.com/vercel-labs/skills)
+[![Node](https://img.shields.io/badge/node-18+-blue)](#how-a-skill-is-built)
 
-## Install
+## Why these skills
 
-```bash
-npx skills add matheuskotayko/skills                        # all skills
-npx skills add matheuskotayko/skills --skill quality-gate   # one skill
+An agent asked to "check security" or "improve the résumé" will produce something. It just won't be the same thing twice, and it rarely says how sure it is. These skills pin the method down.
+
+- **They measure, not just advise.** `quality-gate`, `secret-scan`, and `self-pentest` ship zero-dependency Node scripts with self-tests. The agent runs a tool that exits non-zero, and doesn't decide by feel.
+- **They don't invent facts.** `brag-doc` and `career-profile` pull every claim from git history, merged PRs, or a fact you confirmed. A number with no source gets flagged, not written.
+- **They work in any agent.** Claude Code, Codex, Cursor, and anything that reads the `SKILL.md` format. Install once, use everywhere.
+- **They stay small.** Each `SKILL.md` is a short playbook. Tables, recipes, and templates load only when the agent needs them.
+
+## How it works
+
 ```
+you ask ──▶ agent matches ──▶ loads SKILL.md ──▶ runs scripts/ ──▶ report
+"is this     the skill's       (short playbook;   (tested tool,     + next
+ safe to     "Use when"        REFERENCE.md on    exit code         steps
+ ship?"      description       demand)            decides)
+```
+
+The agent picks a skill from its description, reads the short `SKILL.md`, and pulls in `REFERENCE.md` only for the step it is on. Where a script exists, the script's result decides, not the model's opinion.
 
 ## Skills
 
-### Code quality and security
+| Area | Skill | What it does |
+|---|---|---|
+| Quality | [quality-gate](skills/quality-gate/SKILL.md) | Ratchet CI gate: a PR may add code but never regress a metric. Also includes a loop that drives the PR to green. |
+| Security | [self-pentest](skills/self-pentest/SKILL.md) | Red-teams your own app before release. It scores each attack by how many independent layers stop it, then writes fix reports and ready-to-paste issues. |
+| Security | [secret-scan](skills/secret-scan/SKILL.md) | Finds exposed keys, tokens, and passwords in the working tree and git history. It redacts every match and fails CI. |
+| Agents | [agent-context](skills/agent-context/SKILL.md) | Reorganizes `AGENTS.md` / `CLAUDE.md` into one canonical source per directory. Splits out deep docs and prunes stale context. |
+| Career | [brag-doc](skills/brag-doc/SKILL.md) | Turns git history, merged PRs, and metric trends into evidence-backed résumé bullets. |
+| Career | [career-profile](skills/career-profile/SKILL.md) | Writes LinkedIn, résumé, and portfolio copy from validated facts, using the X-Y-Z method. Chains with `brag-doc`. |
+| Product | [landing-review](skills/landing-review/SKILL.md) | Audits a landing page or marketing copy against Marc Lou's 31 rules for viral products. |
 
-| Skill | What it does |
-|---|---|
-| [quality-gate](skills/quality-gate/SKILL.md) | Ratchet CI gate: a PR may add code but never regress a metric. Also includes a loop that drives the PR to green. |
-| [self-pentest](skills/self-pentest/SKILL.md) | Red-teams your own app before release. It scores each attack by how many independent layers stop it, then writes fix reports and ready-to-paste issues. |
-| [secret-scan](skills/secret-scan/SKILL.md) | Finds exposed keys, tokens, and passwords in the working tree and git history. It redacts every match and fails CI. |
+## Quick start
 
-### Agent workflow
+```bash
+npx skills add matheuskotayko/skills                        # every skill
+npx skills add matheuskotayko/skills --skill quality-gate   # just one
+```
 
-| Skill | What it does |
-|---|---|
-| [agent-context](skills/agent-context/SKILL.md) | Reorganizes `AGENTS.md` / `CLAUDE.md` files into one canonical source per directory. Splits out deep docs and prunes stale context. |
+Then ask your agent in plain words. The skill loads on its own.
 
-### Career and product
+> **Renamed in Nov 2026.** `marclou-review` became `landing-review`, `pentest-me` became `self-pentest`, `brag-me` became `brag-doc`, `profile-me` became `career-profile`, and `organize-agent-context` became `agent-context`. Reinstall with the new names.
 
-| Skill | What it does |
-|---|---|
-| [brag-doc](skills/brag-doc/SKILL.md) | Turns git history, merged PRs, and metric trends into evidence-backed résumé bullets. |
-| [career-profile](skills/career-profile/SKILL.md) | Writes LinkedIn, résumé, and portfolio copy from validated facts, using the X-Y-Z method. Chains with `brag-doc`. |
-| [landing-review](skills/landing-review/SKILL.md) | Audits a landing page or marketing copy against Marc Lou's 31 rules for viral products. |
+## Everyday use
 
-## Quality gate at a glance
+- "Set up a quality gate for this repo." The agent writes the config and `baseline.json` and adds the GitHub Actions workflow.
+- "Babysit this PR until it's green." The agent fixes the code, never the baseline.
+- "Are we safe to ship?" or "pentest the API." You get a depth score per attack vector and a fix report.
+- "Did we ever commit a key?" `secret-scan --git` sweeps the full history, with every match redacted.
+- "Our `CLAUDE.md` is 800 lines, clean it up." The agent splits it by altitude, leaves one canonical `AGENTS.md`, and prunes the rest.
+- "What did I ship on this project?" and then "turn it into my LinkedIn." `brag-doc` harvests the facts and `career-profile` writes them per channel.
+- "Review this landing page." The page is checked rule by rule, and each fix is concrete.
 
-One engine, adopted in stages. `--preset=lite` runs the base metrics and `--preset=full` runs everything.
+### Quality gate stages
+
+One engine, adopted as the project matures. `--preset=lite` runs the base metrics and `--preset=full` runs everything.
 
 | Stage | Metrics |
 |---|---|
@@ -47,24 +73,31 @@ One engine, adopted in stages. `--preset=lite` runs the base metrics and `--pres
 | Wave 3 | microbenchmarks, judged against a ±10% noise band (own CI job) |
 | Pass/fail | e2e, regression, `osv-gate` (vulnerabilities on any stack) |
 
-Details, per-stack recipes, and the GitHub Actions workflow: [quality-gate/REFERENCE.md](skills/quality-gate/REFERENCE.md).
+Per-stack recipes and the full workflow: [quality-gate/REFERENCE.md](skills/quality-gate/REFERENCE.md).
+
+## How a skill is built
+
+```
+skills/<name>/
+  SKILL.md        frontmatter (name + description) + short playbook, max 120 lines
+  REFERENCE.md    tables, recipes, templates, loaded on demand
+  scripts/        zero-dependency Node (18+), each with --selftest
+scripts/
+  lint-skills.mjs checks every skill against the house rules
+```
 
 ## Contributing
 
-House rules for adding or editing a skill (structure, style, privacy, verification) live in [AGENTS.md](AGENTS.md). [CLAUDE.md](CLAUDE.md) is only a pointer to it. Before opening a PR:
+House rules for adding or editing a skill (structure, style, privacy, verification) live in [AGENTS.md](AGENTS.md). [CLAUDE.md](CLAUDE.md) only points to it. Before opening a PR:
 
 ```bash
-node scripts/lint-skills.mjs                                  # house rules for every skill
+node scripts/lint-skills.mjs
 for f in scripts/*.mjs skills/*/scripts/*.mjs; do node "$f" --selftest; done
 ```
 
-CI runs both on every PR.
-
-> **Renamed in Nov 2026.** `marclou-review` became `landing-review`, `pentest-me` became `self-pentest`, `brag-me` became `brag-doc`, `profile-me` became `career-profile`, and `organize-agent-context` became `agent-context`. Reinstall with the new names.
+CI runs both on every push and PR.
 
 ## Attribution
-
-Credit where the ideas come from:
 
 - **`quality-gate`** implements Lucas Montano's ratchet and AI-babysitting method from [Como garantir qualidade de código com IA](https://youtu.be/qToBgU8K4Ms). The concept is his. The script, recipes, and CI workflow are this repo's.
 - **`landing-review`** packages Marc Lou's [31 Principles of a Viral Product](https://newsletter.marclou.com/p/31-principles-of-a-viral-product) as an agent-checkable rubric.
@@ -72,3 +105,7 @@ Credit where the ideas come from:
 - **`career-profile`** uses Laszlo Bock's X-Y-Z bullet formula, plus common LinkedIn practice, distilled.
 - **`self-pentest`**, **`secret-scan`**, and **`agent-context`** are original work. `secret-scan` follows the spirit of gitleaks and trufflehog. `agent-context` builds on Claude Code's documented memory loading, and this repo's own `AGENTS.md` was written with it.
 - The skill-writing standard in [AGENTS.md](AGENTS.md) is adapted from Matt Pocock's [`write-a-skill`](https://github.com/mattpocock/skills/blob/main/skills/productivity/write-a-skill/SKILL.md).
+
+## Acknowledgements
+
+Built collaboratively with Claude Code.
