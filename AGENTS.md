@@ -17,6 +17,10 @@ skills/<name>/
 Flat repo, one skill per directory. No monorepo packages, no nested `AGENTS.md` needed.
 Repo tooling lives in `scripts/` (`lint-skills.mjs`) and CI in `.github/workflows/ci.yml`.
 
+To release, move the `Unreleased` entries in `CHANGELOG.md` under a new SemVer heading, then tag it
+(`git tag -a vX.Y.Z`) and publish it (`gh release create`). A rename or removal of a skill is a
+major version.
+
 ## House style for a skill
 
 Agents building or editing a skill here follow this section — it is the repo's skill-writing
@@ -47,8 +51,9 @@ skill is installed for it.
 3. If the skill isn't fully original work, add a paragraph under README.md's `## Attribution`
    crediting the source explicitly (see `landing-review` and
    `quality-gate` for the pattern) — silence on sourcing is not acceptable here.
-4. Run every touched script's `--selftest`.
-5. If the skill does real work (scans a filesystem, greps a repo, calls `git`/`gh`), smoke-test
+4. Add a line under `## [Unreleased]` in `CHANGELOG.md`.
+5. Run every touched script's `--selftest`.
+6. If the skill does real work (scans a filesystem, greps a repo, calls `git`/`gh`), smoke-test
    it against a real project before committing — a passing selftest alone doesn't prove the tool
    behaves on real input.
 
