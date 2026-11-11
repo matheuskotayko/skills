@@ -9,3 +9,6 @@ secret-scan.md
 attack-surface.md
 brag-facts.json
 metrics.json
+
+# Stray archives
+*.rar
