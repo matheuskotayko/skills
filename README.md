@@ -39,6 +39,7 @@ The agent picks a skill from its description, reads the short `SKILL.md`, and pu
 | Agents | [agent-context](skills/agent-context/SKILL.md) | Reorganizes `AGENTS.md` / `CLAUDE.md` into one canonical source per directory. Splits out deep docs and prunes stale context. |
 | Career | [brag-doc](skills/brag-doc/SKILL.md) | Turns git history, merged PRs, and metric trends into evidence-backed résumé bullets. |
 | Career | [career-profile](skills/career-profile/SKILL.md) | Writes LinkedIn, résumé, and portfolio copy from validated facts, using the X-Y-Z method. Chains with `brag-doc`. |
+| Docs | [project-readme](skills/project-readme/SKILL.md) | Writes or rewrites a project's README in a professional structure, including only the sections the repo has evidence for. Fits any stack. |
 | Product | [landing-review](skills/landing-review/SKILL.md) | Audits a landing page or marketing copy against Marc Lou's 31 rules for viral products. |
 
 ## Quick start
@@ -104,6 +105,7 @@ CI runs both on every push and PR.
 - **`landing-review`** packages Marc Lou's [31 Principles of a Viral Product](https://newsletter.marclou.com/p/31-principles-of-a-viral-product) as an agent-checkable rubric.
 - **`brag-doc`** automates Julia Evans' [brag document](https://jvns.ca/blog/brag-documents/) idea.
 - **`career-profile`** uses Laszlo Bock's X-Y-Z bullet formula, plus common LinkedIn practice, distilled.
+- **`project-readme`** takes its section structure from the README of [akitaonrails/ai-memory](https://github.com/akitaonrails/ai-memory), generalized for any project. The fact collector and the include-when rules are this repo's.
 - **`self-pentest`**, **`secret-scan`**, and **`agent-context`** are original work. `secret-scan` follows the spirit of gitleaks and trufflehog. `agent-context` builds on Claude Code's documented memory loading, and this repo's own `AGENTS.md` was written with it.
 - The skill-writing standard in [AGENTS.md](AGENTS.md) is adapted from Matt Pocock's [`write-a-skill`](https://github.com/mattpocock/skills/blob/main/skills/productivity/write-a-skill/SKILL.md).
 

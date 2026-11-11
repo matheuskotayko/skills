@@ -7,6 +7,9 @@ incompatibly. A minor version means a new skill or feature. A patch version mean
 
 ## [Unreleased]
 
+### Added
+- `project-readme` skill: professional README for any project, with the `readme-facts.mjs` fact collector.
+
 ## [1.0.0] - 2026-11-11
 
 First tagged release. Everything below is included.
